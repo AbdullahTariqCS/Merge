@@ -1,0 +1,34 @@
+.sb {
+    min-height: 100vh; 
+    background-color: #131313;
+}
+
+.title{
+    cursor: pointer;
+    font-size: x-large;
+    font-weight: bolder;
+    color: #f1f1f1; 
+    padding: 0.5rem;
+
+}
+
+.nav-link {
+    padding-top: 0.4rem; 
+    padding-bottom: 0.4rem; 
+    padding-left: 1rem;
+    padding-right: 1rem;
+    color:#bdbdbd !important; 
+}
+.nav-item > .nav-link {
+    color:#bdbdbd; 
+    cursor: pointer;
+}
+
+.nav-item>.nav-link:hover,
+.nav-item>.nav-link.active {
+    background-color: #232323;
+}
+
+.nav-item>.nav-link.active {
+    color: #f1f1f1;
+}

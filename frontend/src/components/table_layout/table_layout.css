@@ -1,0 +1,60 @@
+.form-control{
+    border: none
+}
+.button{
+    display: flex;
+    justify-content: flex-end;
+}
+.table-dark{
+    background-color: #1e1e1e;
+}
+.table-responsive{
+    scrollbar-color: #5e5e5e #1e1e1e;
+}
+.table-wrapper{
+    margin-bottom: 6rem;
+    padding: 1.5rem;
+    padding-top: 0.5rem;
+}
+.table-name{
+    color: #ededed;
+    padding-left: 1.5rem;
+    margin: 1rem;
+    font-size: x-large;
+    font-weight: bold;
+}
+.white-border{
+    border-color: #ededed;
+}
+.form-group{
+    margin-bottom: 0rem;
+    height: 70%
+    /* z-index: 100; */
+}
+.form-control{
+   z-index: inherit; 
+}
+.table-input{
+    width:100%;
+    height:100%;
+}
+
+.cell-multi-view ul{
+    overflow-y: auto;
+    max-height: 75px;
+}
+.cell-multi-view ul{
+    list-style-type: circle !important;
+}
+.cell-multi-view li{
+    list-style-type: disc ;
+}
+.create-tuple{
+    font-size: medium; 
+    font-weight: bold; 
+    color: #5a5a5a;
+    cursor: pointer;
+}
+.create-tuple:hover{
+    background-color:#323232 ;
+}
