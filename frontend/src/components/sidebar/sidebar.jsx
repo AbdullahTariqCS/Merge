@@ -37,14 +37,14 @@ function Sidebar({ title, selectContent, selected, }) {
   // const [selected, setSelected] = useState('view 1')
 
   const data = {
-    Members: true,
+    Members: { view: true, edit: true },
     CreateTable: true,
     views: [
-      { id: 1, title: 'view 1' },
-      { id: 2, title: 'view 2' },
-      { id: 3, title: 'view 3' },
+      { id: 1, title: 'view 1' , edit: true},
+      { id: 2, title: 'view 2' , edit: true},
+      { id: 3, title: 'view 3' , edit: true},
     ]
-  }
+  };
 
   return (
     <>
@@ -55,7 +55,7 @@ function Sidebar({ title, selectContent, selected, }) {
 
         <ul className="nav flex-column nav-pills " id="pills-tab" role="tablist">
           {
-            data.Members &&
+            data.Members.view &&
             <SidebarItem title='Members' condition={selected.content_type == 'Members'}
               select={selectContent} newContent={{ content_type: 'Members', props: {} }} />
           }
