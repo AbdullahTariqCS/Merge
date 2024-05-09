@@ -59,7 +59,7 @@ const data = {
   attributes: [
     { id: 1, tableId: 1, title: 'reg', type: 'number', options: null },
     { id: 2, tableId: 1, title: 'name', type: 'text', options: null },
-    { id: 3, tableId: 1, title: 'type', type: 'multi-select', options: ['ambassador', 'normal'] },
+    { id: 3, tableId: 1, title: 'type', type: 'single-select', options: ['ambassador', 'normal'] },
     { id: 4, tableId: 2, title: 'hostel no.', type: 'multi-select', options: ['hostel 11', 'hostel 12'] }
     
   ],

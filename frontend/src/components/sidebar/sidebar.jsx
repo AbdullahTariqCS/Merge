@@ -33,16 +33,17 @@ function SidebarView(props) {
     </li>
   )
 }
-function Sidebar({ title, selectContent, selected, }) {
+function Sidebar({ sessionId, title, selectContent, selected, }) {
   // const [selected, setSelected] = useState('view 1')
 
+  //api/sidebar/
   const data = {
     Members: { view: true, edit: true },
     CreateTable: true,
-    views: [
-      { id: 1, title: 'view 1' , edit: true},
-      { id: 2, title: 'view 2' , edit: true},
-      { id: 3, title: 'view 3' , edit: true},
+    tables: [
+      { id: 1, title: 'Table 1' , view: true, edit: true},
+      { id: 2, title: 'Table 2' , view: true, edit: true},
+      { id: 3, title: 'Table 3' , view: true, edit: true},
     ]
   };
 
@@ -60,15 +61,15 @@ function Sidebar({ title, selectContent, selected, }) {
               select={selectContent} newContent={{ content_type: 'Members', props: {} }} />
           }
 
-          {
-            data.CreateTable && <Create select={selectContent} />
-          }
 
           <hr style={{ border: '1px solid #fefefe90', width: '100%' }}></hr>
-          {data.views.map((listItem) => {
+          {data.tables.map((listItem) => {
             return <SidebarView key={listItem.title} item={listItem} selected={selected.props.id === undefined ? -1 : selected.props.id} select={selectContent} />
             // return <SidebarItem key={listItem.title} item={listItem} selected = {props.selected.props.id === undefined? -1 : props.selected.props.id} select={props.selectContent}/>
           })}
+          {
+            data.CreateTable && <Create select={selectContent} />
+          }
         </ul>
       </div>
 

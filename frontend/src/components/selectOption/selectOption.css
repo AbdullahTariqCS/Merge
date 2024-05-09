@@ -17,7 +17,7 @@
    border: none; 
 }
 .select-list{
-    scrollbar-color: #616161 #181818;
+    scrollbar-color: #616161 #131313;
     overflow-y: auto;
     height: 130px;
     padding: 1rem;
