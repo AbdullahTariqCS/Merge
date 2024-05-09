@@ -14,13 +14,17 @@
 }
 
 .header-button:hover {
-    border: 1px solid #fefefe
+    border: 1px solid #fefefe;
 }
 
 .header-button.selected {
-    background-color: #008ffd36;
+    color: #222222;
+    background-color: #fefefe;
+    font-weight: 500; 
 }
-
+.header-button:hover{
+    background-color: #fefefe80;
+}
 
 .filter {
     position: fixed;
@@ -69,7 +73,7 @@
     padding: 1.5rem;
     padding-top: 0.5rem;
     overflow-y: auto;
-    max-height: 60vh;
+    ''max-height: 60vh;
 }
 
 .fas{
@@ -116,16 +120,16 @@
 
 .cell-multi-view ul {
     overflow-y: auto;
-    max-height: 50px;
+    max-height: 28px;
 }
 
-.cell-multi-view ul {
+/* .cell-multi-view ul {
     list-style-type: circle !important;
 }
 
 .cell-multi-view li {
     list-style-type: disc;
-}
+} */
 
 .create-tuple {
     font-size: medium;

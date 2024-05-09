@@ -80,7 +80,7 @@ function Table(props) {
           <tbody className='body-wrapper'>
             {
               tableData.data.map((tuple) => {
-                return <Tuple data={tuple.vals} id={tuple.id} attribs={tableData.attribs} permission={tableData.permission} expaned={configuration.expanded} />
+                return <Tuple data={tuple.vals} id={tuple.id} attribs={tableData.attribs} permission={tableData.permission} expanded={configuration.expanded} />
               })
             }
             <tr className='create-tuple' onClick={() => onTupleCreate()}><td colSpan={tableData.attribs.length}>
@@ -130,7 +130,7 @@ function Head({ attribs, configuration, setConfiguration }) {
       setConfiguration({ ...configuration, sort: { attrib: attrib, asc: !configuration.sort.asc } });
     else if (configuration.sort.attrib === attrib && configuration.sort.asc === false)
       setConfiguration({ ...configuration, sort: { attrib: '', asc: !configuration.sort.asc } });
-    else 
+    else
       setConfiguration({ ...configuration, sort: { attrib: attrib, asc: true } });
     console.log(configuration);
   }
@@ -144,7 +144,7 @@ function Head({ attribs, configuration, setConfiguration }) {
             const style = { fontSize: '16px', fontFamily: '', opacity: '50%' };
 
             return (
-              <th className='w-20' scope="col" style={{ width: `${100 / attribs.length}%`, cursor: 'pointer' }}
+              <th className='w-20 pl-0' scope="col" style={{ width: `${100 / attribs.length}%`, cursor: 'pointer' }}
                 onClick={() => onClick(attrib.name)}>
 
                 <div className='container-fluid row d-flex align-items-center pr-0'>
@@ -255,7 +255,7 @@ function Cell(props) {
   if (clicked && (props.type.includes('select')))
     return (
       <td className='cell' style={{ width: `${props.cellWidth}%` }} ref={cellRef}>
-        {props.type.includes('multi') ? (<ul className='mb-2 pl-0'>{value.map((currentval) => <li className=''>{currentval}</li>)}</ul>) : <div className='mb-2'>{value}</div>}
+        {props.type.includes('multi') ? (<ul className='mb-2 ml-1 pl-0 list-unstyled'>{value.map((currentval) => <li className=''>{currentval}</li>)}</ul>) : <div className='mb-2'>{value}</div>}
         <Select list={props.options} position={props.type.includes('multi') ? undefined : selectPos} onSelectValue={onSubmit} />
       </td>
 
@@ -269,26 +269,26 @@ function Cell(props) {
         }
         }>
           <div className='form-group' >
-            {Array.isArray(value) ? (<ul className='mb-1 pl-0'>{value.map((currentval) => <li className=''>{currentval}</li>)}</ul>) : <></>}
+            {Array.isArray(value) ? (<ul className='mb-1 ml-1 pl-0 list-unstyled'>{value.map((currentval) => <li className=''>{currentval}</li>)}</ul>) : <></>}
             <input type='text' id='box' className='form-control table-input' autoComplete='off' defaultValue={props.type.includes('multi') ? null : value} autoFocus />
           </div>
         </form>
       </td>
     );
-
+  console.log(props.expanded);
   return (
     // <td className='' style={{ width: `${props.cellWidth}%` }} onClick={onClick}>{value}</td>
 
     <td className='cell' style={{ height: '25px', width: `${props.cellWidth}%`, cursor: 'pointer' }} ref={cellRef} onClick={(e) => onClick(e)}>
       {Array.isArray(value) ?
         (
-          <div className='cell-multi-view'> 
-            <ul className='mb-1 pl-0 ml-2' style={{ listStyle: 'disc' }}>
+          <div className={props.expanded ? 'ml-1 ' : 'cell-multi-view ml-1'}>
+            <ul className='mb-1 pl-0' style={{ listStyle: 'none' }}>
               {value.map((currentval) => <li className=''>{currentval}</li>)}
             </ul>
           </div>
         )
-        : <div className='mb-2 ml-2'>{value}</div>
+        : <div className='mb-2 ml-1'>{value}</div>
       }
     </td>
   );
