@@ -1,21 +1,22 @@
 import React, { useState, useRef } from 'react';
 import '../../assets/theme.css'
 import './selectOption.css'
-function Select({ list, position, onSelectValue }) {
+function Select({ list, position, onSelectValue, clear = true}) {
 
-  const [filteredList, setFilteredList] = useState([...list, 'clear']);
+  const [filteredList, setFilteredList] = clear ? useState([...list, 'clear']) : useState(list);
 
   const onUpdate = () => {
     const newList = list.filter((item) => item.toLowerCase().includes(inputRef.current.value.toLowerCase()));
-    setFilteredList([...newList, 'clear']);
+    clear? setFilteredList([...newList, 'clear']) : setFilteredList(newList);
   }
+
   const inputRef = useRef(null);
   const onSubmit = (e) => {
     e.preventDefault();
     console.log('onSubit');
     if (filteredList.length == 0)
       return
-    if (filteredList[0] === 'clear') {
+    if (filteredList[0] === 'clear' && clear) {
       onSelectValue('');
       return;
     }
@@ -32,8 +33,8 @@ function Select({ list, position, onSelectValue }) {
       <div className='select-list'>
         <ul className='pl-0'>
           {filteredList.map((option) => {
-            return (<li className='select-list-item m-secondary' style={option === 'clear' ? { color: '#fa6262' } : {}}
-              onClick={() => option === 'clear' ? onSelectValue('') : onSelectValue(option)}>{option}</li>)
+            return (<li className='select-list-item m-secondary' style={option === 'clear' && clear ? { color: '#fa6262' } : {}}
+              onClick={() => option === 'clear' && clear ? onSelectValue('') : onSelectValue(option)}>{option}</li>)
           })}
         </ul>
 

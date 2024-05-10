@@ -3,18 +3,18 @@ import './Members.css'
 import '../../assets/theme.css'
 // import { selectMouseDown, selectMouseUp, selectMouseMove, SelectBox } from "../display_box/SelectBox";
 import '../../assets/colors.css'
-import Select from '../selectOption/selectOption' 
+import Select from '../selectOption/selectOption'
 
 function Box({ name, color, members, allMembers }) {
 
 	const [selectedItems, setSelectedItems] = useState([]);
 	const [addMember, setAddMember] = useState(false);
 	const [memberList, setMemberList] = useState(members);
-	const [newMember, setNewMember] = useState(null); 
-	
-	useEffect(()=> {
-		if(newMember == null)
-			return; 
+	const [newMember, setNewMember] = useState(null);
+
+	useEffect(() => {
+		if (newMember == null)
+			return;
 
 		//api/role/add_member?user_id=:user_id&&session_id=:session_id
 		setMemberList([...memberList, newMember]);
@@ -66,7 +66,7 @@ function Box({ name, color, members, allMembers }) {
 			document.removeEventListener('mousedown', handleClickOutsideAddMember);
 		};
 	}, []);
-	
+
 
 	return (
 		<>
@@ -82,10 +82,10 @@ function Box({ name, color, members, allMembers }) {
 						)
 					})}
 				</ul>
-					
+
 				{
-					addMember? <Select list={allMembers} onSelectValue={setNewMember}/> : 
-					<p className="add-member" onClick={(e) => setAddMember(true)}>+Add</p>
+					addMember ? <Select list={allMembers} onSelectValue={setNewMember} /> :
+						<p className="add-member" onClick={(e) => setAddMember(true)}>+Add</p>
 				}
 			</div>
 		</>
@@ -98,27 +98,27 @@ function Members() {
 	//api/roles/index/vals?session=:session_id
 	const roles = [
 		{
-			id: 1, 
+			id: 1,
 			name: 'Admin',
 			color: 'green',
 			members: ['name 1', 'name 2', 'name 3', 'name 4', 'name 5']
 		},
 
 		{
-			id: 2, 
+			id: 2,
 			name: 'Custom role 1',
 			color: 'cyan',
 			members: ['name 1', 'name 2', 'name 3',]
 		},
 
 		{
-			id: 3, 
+			id: 3,
 			name: 'Custome role 2',
 			color: 'red',
 			members: ['name 1', 'name 2']
 		},
 		{
-			id: 4, 
+			id: 4,
 			name: 'Custome role 3',
 			color: 'orange',
 			members: ['name 1', 'name 2', 'name 3',]
@@ -127,15 +127,15 @@ function Members() {
 
 	//data/api/members/index 
 	const members = [
-    'member 2',
-    'member 3',
-    'member 4',
-    'member 5',
-    'member 5',
-    'member 5',
-    'member 5',
-    'member 5',
-    'member 5',
+		'member 2',
+		'member 3',
+		'member 4',
+		'member 5',
+		'member 5',
+		'member 5',
+		'member 5',
+		'member 5',
+		'member 5',
 	]
 	return (
 		<div className="participants">
@@ -145,7 +145,7 @@ function Members() {
 				<div className="container-fluid" >
 					<div className="row">
 						{
-							roles.map((role) => (<Box name={role.name} color={role.color} members={role.members} allMembers={members}/>))
+							roles.map((role) => (<Box name={role.name} color={role.color} members={role.members} allMembers={members} />))
 						}
 					</div>
 				</div>

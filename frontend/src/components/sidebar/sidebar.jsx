@@ -33,23 +33,24 @@ function SidebarView(props) {
     </li>
   )
 }
-function Sidebar({ sessionId, title, selectContent, selected, }) {
+function Sidebar({ sessionId, userName, title, selectContent, selected, }) {
   // const [selected, setSelected] = useState('view 1')
 
   //api/sidebar/
+  //gets the table along with permissions. Also the permisstion to create table, and view
   const data = {
     Members: { view: true, edit: true },
     CreateTable: true,
     tables: [
-      { id: 1, title: 'Table 1' , view: true, edit: true},
-      { id: 2, title: 'Table 2' , view: true, edit: true},
-      { id: 3, title: 'Table 3' , view: true, edit: true},
+      { id: 1, title: 'Table 1', view: true, edit: true },
+      { id: 2, title: 'Table 2', view: true, edit: true },
+      { id: 3, title: 'Table 3', view: true, edit: true },
     ]
   };
 
   return (
     <>
-      <div className='col-sm-2 p-3 sb'>
+      <div className='col-sm-2 p-3 sb '>
         <div className='title mb-3 mt-2' onClick={() => selectContent({ content_type: 'Welcome', props: {} })}>
           {title}
         </div>
@@ -62,14 +63,21 @@ function Sidebar({ sessionId, title, selectContent, selected, }) {
           }
 
 
-          <hr style={{ border: '1px solid #fefefe90', width: '100%' }}></hr>
-          {data.tables.map((listItem) => {
-            return <SidebarView key={listItem.title} item={listItem} selected={selected.props.id === undefined ? -1 : selected.props.id} select={selectContent} />
-            // return <SidebarItem key={listItem.title} item={listItem} selected = {props.selected.props.id === undefined? -1 : props.selected.props.id} select={props.selectContent}/>
-          })}
-          {
-            data.CreateTable && <Create select={selectContent} />
-          }
+          <hr className='pl-0 ml-0' style={{ border: '1px solid #fefefe90', width: '100%', overflow: 'none'}}></hr>
+
+          <div className='sidebar-table-list'>
+            {data.tables.map((listItem) => {
+              return <SidebarView key={listItem.title} item={listItem} selected={selected.props.id === undefined ? -1 : selected.props.id} select={selectContent} />
+              // return <SidebarItem key={listItem.title} item={listItem} selected = {props.selected.props.id === undefined? -1 : props.selected.props.id} select={props.selectContent}/>
+            })}
+            {
+              data.CreateTable && <Create select={selectContent} />
+            }
+          </div>
+          <div className='user-name m-primary container-fluid pl-4 row d-flex align-items-center'>
+            <i className='far fa-user p-2 pr-0'></i>
+            <div className=''>{userName}</div>
+          </div>
         </ul>
       </div>
 

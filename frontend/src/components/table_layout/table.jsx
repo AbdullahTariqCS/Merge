@@ -186,6 +186,7 @@ function Cell(props) {
   const [clicked, setClicked] = useState(props.selected);
   const [errors, setErrors] = useState(props.errors);
 
+  const [selectedItems, setSelectedItems] = useState([]);
   const [selectPos, setSelectPos] = useState({ x: 0, y: 0 });
   const cellRef = useRef(null);
 
@@ -208,9 +209,31 @@ function Cell(props) {
       if (props.type.includes('select')) {
 
         const rect = e.target.getBoundingClientRect();
-        setSelectPos({ x: rect.x - 20, y: rect.y + 50 });
+        setSelectPos({ x: rect.x - 15, y: rect.y + 40 });
       }
     }
+  };
+
+  const handleSelectList = (id, ctrlKey, shiftKey) => {
+    let newSelectedItems;
+    if (ctrlKey) {
+      if (selectedItems.includes(id)) {
+        newSelectedItems = selectedItems.filter(itemId => itemId !== id);
+      } else {
+        newSelectedItems = [...selectedItems, id];
+      }
+    }
+    else if (shiftKey) {
+      const min = Math.min(...selectedItems);
+      newSelectedItems = id <= Math.min(...selectedItems) ?
+        Array(min - id + 1).fill().map((_, index) => index + id) :
+        Array(id - min + 1).fill().map((_, index) => index + min)
+    }
+    else {
+      newSelectedItems = [id];
+    }
+
+    setSelectedItems(newSelectedItems);
   };
 
   useEffect(() => {
@@ -238,10 +261,11 @@ function Cell(props) {
   //   };
   // }, [cellRef, clicked]);
 
-  useEffect(() => {
+  useEffect(() =>{
     const handleClickOutside = (e) => {
       if (!e.target.closest('.cell')) {
         setClicked(false);
+        setSelectedItems([]);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -250,16 +274,19 @@ function Cell(props) {
     };
   }, []);
 
-
   // const value = props.type === 'multi-value' || props.type === 'multi-select' ? 
   if (clicked && (props.type.includes('select')))
     return (
       <td className='cell' style={{ width: `${props.cellWidth}%` }} ref={cellRef}>
-        {props.type.includes('multi') ? (<ul className='mb-2 ml-1 pl-0 list-unstyled'>{value.map((currentval) => <li className=''>{currentval}</li>)}</ul>) : <div className='mb-2'>{value}</div>}
-        <Select list={props.options} position={props.type.includes('multi') ? undefined : selectPos} onSelectValue={onSubmit} />
+        {props.type.includes('multi') ?
+          (<ul className='mb-2 ml-1 pl-0 list-unstyled'>
+            {value.map((currentval, idx) => <li className={`cell-list-item ${selectedItems.includes(idx) ? 'm-primary' : 'm-secondary'}`} onClick={(e) => handleSelectList(idx, e.ctrlKey, e.shiftKey)}>{currentval}</li>)}
+          </ul>)
+          : <div className='mb-2 ml-1'>{value}</div>}
+        <Select list={props.options} position={props.type.includes('multi') ? undefined : selectPos} onSelectValue={onSubmit} clear={!props.type.includes('multi')} />
       </td>
-
     )
+
   if (clicked)
     return (
       <td className='cell' style={{ width: `${props.cellWidth}%` }} ref={cellRef}>
@@ -269,17 +296,21 @@ function Cell(props) {
         }
         }>
           <div className='form-group' >
-            {Array.isArray(value) ? (<ul className='mb-1 ml-1 pl-0 list-unstyled'>{value.map((currentval) => <li className=''>{currentval}</li>)}</ul>) : <></>}
+            {
+              Array.isArray(value) &&
+              <ul className='mb-1 ml-2 pl-0 list-unstyled'>
+                {value.map((currentval, idx) => <li className={`cell-list-item ${selectedItems.includes(idx) ? 'm-primary' : 'm-secondary'}`} onClick={(e) => handleSelectList(idx, e.ctrlKey, e.shiftKey)}>{currentval}</li>)}
+              </ul>
+            }
             <input type='text' id='box' className='form-control table-input' autoComplete='off' defaultValue={props.type.includes('multi') ? null : value} autoFocus />
           </div>
         </form>
       </td>
     );
-  console.log(props.expanded);
   return (
     // <td className='' style={{ width: `${props.cellWidth}%` }} onClick={onClick}>{value}</td>
 
-    <td className='cell' style={{ height: '25px', width: `${props.cellWidth}%`, cursor: 'pointer' }} ref={cellRef} onClick={(e) => onClick(e)}>
+    <td className='cell' style={{ height: '25px', overflowX: 'auto', maxWidth: `${props.cellWidth}%`, cursor: 'pointer' }} ref={cellRef} onClick={(e) => onClick(e)}>
       {Array.isArray(value) ?
         (
           <div className={props.expanded ? 'ml-1 ' : 'cell-multi-view ml-1'}>
@@ -288,7 +319,7 @@ function Cell(props) {
             </ul>
           </div>
         )
-        : <div className='mb-2 ml-1'>{value}</div>
+        : <div className='cell-text mb-2 ml-1'>{value}</div>
       }
     </td>
   );

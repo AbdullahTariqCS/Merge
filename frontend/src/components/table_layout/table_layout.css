@@ -22,7 +22,7 @@
     background-color: #fefefe;
     font-weight: 500; 
 }
-.header-button:hover{
+.header-button.selected:hover{
     background-color: #fefefe80;
 }
 
@@ -34,9 +34,12 @@
     border-radius: 4px;
     padding: 1rem;
     box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5);
+    z-index: 10;
 }
 
-
+.cell-text-filter{
+    overflow-x: auto;
+}
 .filter-input-select {
     height: 40px;
     padding-bottom: 5px;
@@ -60,6 +63,16 @@
     justify-content: flex-end;
 }
 
+/* .cell{
+    overflow-x: scroll;
+    scrollbar-color: #5e5e5e #1e1e1e;
+    max-width: 30px;
+} */
+.cell-list-item:hover{
+    color: #fefefe; 
+    cursor: pointer;
+    user-select: none;
+}
 .table-dark {
     background-color: #1e1e1e;
 }
@@ -73,7 +86,7 @@
     padding: 1.5rem;
     padding-top: 0.5rem;
     overflow-y: auto;
-    ''max-height: 60vh;
+    max-height: 60vh;
 }
 
 .fas{
