@@ -24,7 +24,7 @@ const ContentList = {
 function Session() {
 
 
-  const [currentContent, setCurrentContent] = useState({ content_type: 'Welcome', props: {} });
+  const [currentContent, setCurrentContent] = useState({ content_type: 'TableCreate', props: {} });
   const Content = ContentList[currentContent.content_type]
 
   // const setContent = (newContent) =>

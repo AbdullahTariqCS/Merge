@@ -3,7 +3,8 @@
   overflow-y: auto;
   max-height: 100vh;
   scrollbar-color: #5e5e5e #1e1e1e;
-  padding: 2rem
+  padding: 2rem;
+
 }
 .center-vertically{
   display: flex;
@@ -48,12 +49,31 @@
   padding-left: 1rem;
   padding-right: 1rem;
   width: 90%;
+  height: 45px;
   color: #fefefe;
   background-color: #191919;
   border: 0.5px solid #5e5e5e;
 
   border-radius: 6px;
 }
+
+.table-create-select-sm {
+  height: 45px;
+  padding-bottom: 8px;
+  padding-top: 8px;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  width: 90%;
+  background-color: #191919;
+  border: 0.5px solid #5e5e5e;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.table-create-select-sm:hover{
+  border: 0.5px solid #fefefe; 
+}
+
 table.table-bordered > thead > tr > th{
   border:1px solid #5e5e5e;
 }
@@ -61,6 +81,11 @@ table.table-bordered > tbody > tr > th{
   border:1px solid #5e5e5e;
 }
 .table-create-input-sm:disabled{
+  opacity: 55%;
+  background-color: #191919;
+  border: 0.5px solid #32323200;
+}
+.table-create-select-sm.disabled{
   opacity: 55%;
   background-color: #191919;
   border: 0.5px solid #32323200;

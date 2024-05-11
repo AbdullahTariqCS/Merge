@@ -4,9 +4,11 @@ import '../../assets/theme.css'
 // import { selectMouseDown, selectMouseUp, selectMouseMove, SelectBox } from "../display_box/SelectBox";
 import '../../assets/colors.css'
 import Select from '../selectOption/selectOption'
+import RoleModel from "./RoleModel";
 
-function Box({ name, color, members, allMembers }) {
+function Box({ name, color, members, allMembers, edit }) {
 
+	const [roleModel, setRoleModel] = useState(false);
 	const [selectedItems, setSelectedItems] = useState([]);
 	const [addMember, setAddMember] = useState(false);
 	const [memberList, setMemberList] = useState(members);
@@ -67,11 +69,30 @@ function Box({ name, color, members, allMembers }) {
 		};
 	}, []);
 
+	useEffect(() => {
+		const handleClickOutsideEditRole = (e) => {
+			if (!e.target.closest('.role-model') && !e.target.closest('.select') || e.key == 'Escape') {
+				setRoleModel(false);
+			}
+		};
+		document.addEventListener('mousedown', handleClickOutsideEditRole);
+		return () => {
+			document.removeEventListener('mousedown', handleClickOutsideEditRole);
+		};
+	}, []);
+
 
 	return (
 		<>
+			<RoleModel canEdit={true} open={roleModel} setOpen={(val) => setRoleModel(val)} color={color} />
 			<div className="col">
-				<div className={`box-name c-${color}`} >{name}</div>
+				<div className={`container-fluid row box-name c-${color} d-flex align-items-center`} >
+					<div>{name}</div>
+					{
+						edit &&
+						<i className="role-edit fas fa-pencil-alt col justify-content-end" style={{ fontSize: 'small' }} onClick={() => setRoleModel(true)}/>
+					}
+				</div>
 
 				<ul className={`box c-border-${color}`}>
 					{memberList.map((member, index) => {
@@ -84,7 +105,7 @@ function Box({ name, color, members, allMembers }) {
 				</ul>
 
 				{
-					addMember ? <Select list={allMembers} onSelectValue={setNewMember} /> :
+					addMember ? <Select list={allMembers} onSelectValue={setNewMember} clear={false} /> :
 						<p className="add-member" onClick={(e) => setAddMember(true)}>+Add</p>
 				}
 			</div>
@@ -92,7 +113,7 @@ function Box({ name, color, members, allMembers }) {
 	)
 }
 
-function Members() {
+function Members({ sessionId, userName }) {
 
 
 	//api/roles/index/vals?session=:session_id
@@ -125,6 +146,10 @@ function Members() {
 		},
 	];
 
+
+	//also retrieve the permission to check wheather the user has permission or not
+	const editPermission = true;
+
 	//data/api/members/index 
 	const members = [
 		'member 2',
@@ -145,7 +170,7 @@ function Members() {
 				<div className="container-fluid" >
 					<div className="row">
 						{
-							roles.map((role) => (<Box name={role.name} color={role.color} members={role.members} allMembers={members} />))
+							roles.map((role) => (<Box name={role.name} color={role.color} members={role.members} edit={editPermission} allMembers={members} />))
 						}
 					</div>
 				</div>

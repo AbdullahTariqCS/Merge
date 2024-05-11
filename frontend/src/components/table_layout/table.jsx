@@ -10,7 +10,7 @@ function Table(props) {
   const [tableData, setTableData] = useState(
     {
       name: ` `,
-      permission: true,
+      editPermission: true,
       configuration: {
         filter: { attrib: '', val: '' },
         sort: { attrib: '', asc: true },
@@ -39,10 +39,12 @@ function Table(props) {
 
   const [configuration, setConfiguration] = useState(tableData.configuration);
   const onTupleCreate = () => {
-    //api/layout/:layout_id/addTuple/:layout_id 
+    //api/table/:table_id/addTuple/:t_id
     //inserts data in data relation, referencing table relation and attribute relation, retriving attribute id and data id
     //retrieves positions from layout relation through attribute id and layout id
     //retrivees edit permission from 
+
+    //api/table/:table_id/tuple/:t_id
     const newTuple = {
       tupleId: 0,
       vals: [
@@ -80,7 +82,7 @@ function Table(props) {
           <tbody className='body-wrapper'>
             {
               tableData.data.map((tuple) => {
-                return <Tuple data={tuple.vals} id={tuple.id} attribs={tableData.attribs} permission={tableData.permission} expanded={configuration.expanded} />
+                return <Tuple data={tuple.vals} id={tuple.id} attribs={tableData.attribs} permission={tableData.editPermission} expanded={configuration.expanded} />
               })
             }
             <tr className='create-tuple' onClick={() => onTupleCreate()}><td colSpan={tableData.attribs.length}>
@@ -194,7 +196,7 @@ function Cell(props) {
     //middleware to check input
     //if errors rerender the cell with an error list
 
-    //api/data/:data_id/val=new_value
+    //api/data/:tuple_id/:attrib_id/val=new_value
     console.log(`${props.id} changed to ${newValue}`)
     if (props.type.includes('multi') && Array.isArray(value))
       setValue([...value, newValue]);
@@ -213,6 +215,7 @@ function Cell(props) {
       }
     }
   };
+
 
   const handleSelectList = (id, ctrlKey, shiftKey) => {
     let newSelectedItems;
@@ -298,7 +301,7 @@ function Cell(props) {
           <div className='form-group' >
             {
               Array.isArray(value) &&
-              <ul className='mb-1 ml-2 pl-0 list-unstyled'>
+              <ul className='mb-1 ml-1 pl-0 list-unstyled'>
                 {value.map((currentval, idx) => <li className={`cell-list-item ${selectedItems.includes(idx) ? 'm-primary' : 'm-secondary'}`} onClick={(e) => handleSelectList(idx, e.ctrlKey, e.shiftKey)}>{currentval}</li>)}
               </ul>
             }

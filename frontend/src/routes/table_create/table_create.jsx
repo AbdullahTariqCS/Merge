@@ -1,27 +1,51 @@
-import { useState, react } from 'react'
+import { useState, react, useEffect } from 'react'
 import './table_create.css'
 import '../../assets/theme.css'
+import Select from '../../components/selectOption/selectOption'
 
-function Attribs(props) {
+function Attribs({ attrib, setAttrib }) {
+  const type = [
+    'text', 'number', 'multi-value-number', 'multi-value-text', 'multi-select-text', 'multi-select-number', 'single-select-text', 'single-select-number'
+  ]
+
+  const [select, setSelect] = useState(false);
+  const [selectPos, setSelectPos] = useState({ x: 0, y: 0 });
+
+  const onSelect = (e) => {
+    const rect = e.target.getBoundingClientRect();
+    setSelectPos({ x: rect.x, y: rect.y + 50});
+    setSelect(true);
+  }
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest('.table-create-select-sm') && !e.target.closest('.select')) {
+        setSelect(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [])
+
   return (
     <>
-      <div className='row' style={{marginBottom: '0.75rem'}}>
-        <div style={{width: '2rem'}}></div> 
+      <div className='row' style={{ marginBottom: '0.75rem' }}>
+        <div style={{ width: '2rem' }}></div>
         <div className='col-sm-4 p-0'>
-          <input type="text" autoComplete='off' className="table-create-input table-create-input-sm" placeholder='Name' defaultValue={props.attrib.value}></input>
+          <input type="text" autoComplete='off' className="table-create-input table-create-input-sm"
+            placeholder='Name' defaultValue={attrib.value} onBlur={(e) => setAttrib('value', e.target.value)}></input>
         </div>
         <div className='col-sm-4 p-0'>
-          <input type="text" autoComplete='off' className="table-create-input table-create-input-sm" placeholder='Type' defaultValue={props.attrib.type} ></input>
+          <div className={`table-create-select-sm ${attrib.type === '' ? 'm-secondary' : 'm-primary'}`} onClick={e => onSelect(e)}>
+            {attrib.type === '' ? 'Type' : attrib.type}
+          </div>
+          {
+            select && <Select position={selectPos} list={type} onSelectValue={(val) => setAttrib('type', val)}/>
+          }
         </div>
       </div>
-      {/* <tr>
-        <td>
-          <input type="text" autoComplete='off' className="table-create-input table-create-input-sm" placeholder='Name' defaultValue={props.attrib.value}></input>
-        </td>
-        <td>
-          <input type="text" autoComplete='off' className="table-create-input table-create-input-sm" placeholder='Type' defaultValue={props.attrib.type} ></input>
-        </td>
-      </tr> */}
     </>
   )
 
@@ -30,7 +54,7 @@ function Relations({ relation, index, changeTwoWay }) {
 
   return (
     <>
-      <div className='row' style={{marginBottom: '0.75rem'}}>
+      <div className='row' style={{ marginBottom: '0.75rem' }}>
 
         <div style={{ width: '2rem' }}></div>
         <div className='col-m-2 pl-0'>
@@ -76,6 +100,7 @@ function Relations({ relation, index, changeTwoWay }) {
 }
 function TableCreate() {
 
+  const [name, setName] = useState('');
   const [attribs, setAttribs] = useState([
     { value: '', type: '' },
     { value: '', type: '' },
@@ -105,44 +130,38 @@ function TableCreate() {
   }
   return (
     <div className='table-create-wrapper'>
-      {/* <div className='m-heading'>Create table</div> */}
       <div className='container-fluid mt-5 pl-4'>
         <form className='mb-5'>
           <div className='row'>
             <label forHtml='TableName' className='m-primary table-create-label col-sm-2 mb-1'>Table Name</label>
             <div className='col-sm-10'>
-              <input type="text" autoComplete='off' className="col-sm-6 table-create-input" id="TableName" ></input>
+              <input type="text" autoComplete='off' className="col-sm-6 table-create-input" defaultValue={name} id="TableName" onBlur={(e) => setName(e.target.value)}></input>
             </div>
           </div>
         </form>
-        {/* <Attribs attribs={attribs} addAttrib={addAttrib} /> */}
 
         <p className='m-primary table-create-label' >Attributes</p>
 
-        {/* <table className='table table-bordered col-sm-8 m-primary'>
-          <thead>
-            <tr>
-              <th scope="col" className='pl-4'>Name</th>
-              <th scope="col">Type</th>
-            </tr>
-          </thead> */}
-        {/* <tbody> */}
         <form className='mb-3'>
           {
-            attribs.map((attrib) => {
-              return (<Attribs attrib={attrib} />);
+            attribs.map((attrib, idx) => {
+              const setAttrib = (target, val) => {
+                var newAttribs = [...attribs];
+                newAttribs[idx][target] = val;
+                setAttribs(newAttribs);
+                console.log(attribs);
+              }
+              return (<Attribs attrib={attrib} setAttrib={setAttrib} />);
             })
           }
 
         </form>
-        {/* </tbody> */}
         <p className='table-create col-sm-1 ml-3 mb-5' onClick={() => addAttrib()}>+Add</p>
-        {/* </table> */}
 
         <p className='m-primary table-create-label mb-3' >Relations</p>
         <form className=''>
           {
-            relations.map((relation, index) => (<Relations relation={relation} index={index} changeTwoWay={changeTwoWay} />))
+            relations.map((relation, index) => (<Relations relation={relation} index={index} setRelations={setRelations} changeTwoWay={changeTwoWay} />))
           }
 
           <p className='table-create col-sm-1 ml-3' onClick={() => addRelation()}>+Add</p>
