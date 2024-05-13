@@ -10,7 +10,13 @@ function Select({ list, position, onSelectValue, clear = true}) {
     clear? setFilteredList([...newList, 'clear']) : setFilteredList(newList);
   }
 
+  
   const inputRef = useRef(null);
+
+  const onEnter = (e) => {
+    if(e.key == 'Enter')
+      onSubmit(e);
+  }  
   const onSubmit = (e) => {
     e.preventDefault();
     console.log('onSubit');
@@ -26,9 +32,7 @@ function Select({ list, position, onSelectValue, clear = true}) {
   const style = position === undefined ? { position: 'inherit' } : { top: position.y + 'px', left: position.x + 'px' };
   return (
     <div className='m-primary select m-background-dark' style={style}>
-      <form onSubmit={onSubmit}>
-        <input ref={inputRef} type="text" autoFocus autoComplete='off' className="select-input" onChange={() => onUpdate()} />
-      </form>
+        <input ref={inputRef} type="text" autoFocus autoComplete='off' onKeyDown={(e) => onEnter(e)}className="select-input" onChange={() => onUpdate()} />
 
       <div className='select-list'>
         <ul className='pl-0'>

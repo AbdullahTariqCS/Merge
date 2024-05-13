@@ -1,16 +1,32 @@
 import React from 'react'
-import Sidebar from './components/sidebar/sidebar' 
+import SessionIndex from './routes/session_index/session_index';
+import {createBrowserRouter, Navigate, RouterProvider} from 'react-router-dom';
 import Session from './routes/session/session'
-import DragSelectList from '../tmp/dragselect'
-// import UMLDiagramComponent from '../tmp/umlbulider'
+import Login from './routes/login/login';
+
+const router = createBrowserRouter([
+  {
+    path: '/', 
+    element: <Navigate to='/login'/>
+  }, 
+  {
+    path: '/login', 
+    element: <Login/>
+  }, 
+  {
+    path: '/home', 
+    element: <SessionIndex/>
+  }, 
+  {
+    path: '/session', 
+    element: <Session/>
+  }
+])
 
 function App() {
 
   return (
-    <>
-      <Session />
-      {/* <DragSelectList/> */}
-    </>
+    <RouterProvider router={router}/>
   )
 }
 

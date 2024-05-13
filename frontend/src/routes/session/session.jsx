@@ -1,5 +1,6 @@
 import React from 'react'
 import { useState } from 'react'
+import { useLocation, useParams } from 'react-router-dom'
 import Sidebar from '../../components/sidebar/sidebar'
 import View from './view'
 import Welcome from './welcome'
@@ -23,8 +24,12 @@ const ContentList = {
 
 function Session() {
 
+  const {search} = useLocation(); 
+  const params = new URLSearchParams(search); 
+  const sessionId = params.get('sessionId'); 
+  console.log(sessionId); 
 
-  const [currentContent, setCurrentContent] = useState({ content_type: 'TableCreate', props: {} });
+  const [currentContent, setCurrentContent] = useState({ content_type: 'Welcome', props: {} });
   const Content = ContentList[currentContent.content_type]
 
   // const setContent = (newContent) =>

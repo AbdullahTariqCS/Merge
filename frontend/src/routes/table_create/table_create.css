@@ -11,6 +11,11 @@
   flex-direction: column;
   justify-content: center;
 }
+
+.table-create-button{
+  z-index: 10;
+  width : 55px
+}
 .table-create-label {
   font-size: large;
   font-weight: bold;
@@ -41,6 +46,7 @@
   border: 0.5px solid #5e5e5e;
   border-radius: 6px;
 
+
 }
 
 .table-create-input-sm {
@@ -53,7 +59,7 @@
   color: #fefefe;
   background-color: #191919;
   border: 0.5px solid #5e5e5e;
-
+  user-select: none;
   border-radius: 6px;
 }
 
@@ -67,6 +73,7 @@
   background-color: #191919;
   border: 0.5px solid #5e5e5e;
   cursor: pointer;
+  user-select: none;
   border-radius: 6px;
 }
 

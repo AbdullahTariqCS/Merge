@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import '../../assets/theme.css'
 import './sidebar.css'
+import LoginSignUp from '../login/login';
 
 function SidebarItem({ title, condition, select, newContent }) {
 
@@ -34,6 +35,7 @@ function SidebarView(props) {
   )
 }
 function Sidebar({ sessionId, userName, title, selectContent, selected, }) {
+  const [login, setLogin] = useState(false);
   // const [selected, setSelected] = useState('view 1')
 
   //api/sidebar/
@@ -48,8 +50,24 @@ function Sidebar({ sessionId, userName, title, selectContent, selected, }) {
     ]
   };
 
+  useEffect(() => {
+		const handleClickOutsideEditRole = (e) => {
+			if (!e.target.closest('.login')) {
+        setLogin(false);
+			}
+		};
+		document.addEventListener('mousedown', handleClickOutsideEditRole);
+		return () => {
+			document.removeEventListener('mousedown', handleClickOutsideEditRole);
+		};
+	}, []);
+
+ 
   return (
     <>
+      {
+        login && <LoginSignUp/> 
+      }
       <div className='col-sm-2 p-3 sb '>
         <div className='title mb-3 mt-2' onClick={() => selectContent({ content_type: 'Welcome', props: {} })}>
           {title}
@@ -74,7 +92,8 @@ function Sidebar({ sessionId, userName, title, selectContent, selected, }) {
               data.CreateTable && <Create select={selectContent} />
             }
           </div>
-          <div className='user-name m-primary container-fluid pl-4 row d-flex align-items-center'>
+          <div className='user-name m-primary container-fluid pl-4 row d-flex align-items-center'
+            onClick={() => setLogin(true)}>
             <i className='far fa-user p-2 pr-0'></i>
             <div className=''>{userName}</div>
           </div>
