@@ -11,12 +11,13 @@ app.use(cors());
 const tableRoutes = require('./routes/tableRoutes');
 const sessionRoutes = require('./routes/sessionRoutes');
 const roleRoutes = require('./routes/rolesRoutes');
-
+const userRoutes = require('./routes/userRoutes'); 
 
 
 app.use('/api/table', tableRoutes);
 app.use('/api/session', sessionRoutes);
 app.use('/api/role', roleRoutes)
+app.use('/api/user', userRoutes)
 
 
 app.use((err, req, res, next) => {

@@ -23,9 +23,6 @@ function Box({ role, allMembers, edit, deleteRole, updateRole, sessionId, userId
 	const [showContextHead, setShowContextHead] = useState(false);
 	const [contextPosHead, setContextPosHead] = useState({ x: 0, y: 0 });
 
-
-
-
 	useEffect(() => {
 		const effect = async () => {
 
@@ -41,13 +38,16 @@ function Box({ role, allMembers, edit, deleteRole, updateRole, sessionId, userId
 
 	}, [newMember, memberList])
 
-	const onMemberDelete = async () => {
+	const onMemberDelete = () => {
+		console.log(selectedItems); 
 		if (selectedItems.length === 0 || !edit)
 			return
 
 		setMemberList(role.members.filter((_, idx) => !selectedItems.includes(idx)))
 		setSelectedItems([]);
-		updateRole(role.id, { ...role, members: memberList });
+
+		console.log((_, idx) => !selectedItems.includes(idx))	
+		updateRole(role.id, { ...role, members: role.members.filter((_, idx) => !selectedItems.includes(idx)) });
 		setShowContext(false);
 	}
 
@@ -69,15 +69,12 @@ function Box({ role, allMembers, edit, deleteRole, updateRole, sessionId, userId
 		else {
 			newSelectedItems = [id];
 		}
-
 		setSelectedItems(newSelectedItems);
 	};
 
-
-
 	useEffect(() => {
 		const handleClickOutside = (e) => {
-			if (!e.target.closest('.box') || e.key == 'Escape') {
+			if (!e.target.closest('.box') && !e.target.closest('.context-menu')|| e.key == 'Escape') {
 				setSelectedItems([]);
 			}
 		};
@@ -104,6 +101,7 @@ function Box({ role, allMembers, edit, deleteRole, updateRole, sessionId, userId
 			if (!e.target.closest('.role-model') && !e.target.closest('.context-menu') && !e.target.closest('.select') || e.key == 'Escape') {
 				setRoleModel(false);
 				setShowContext(false);
+				setShowContextHead(false); 
 			}
 		};
 		document.addEventListener('mousedown', handleClickOutsideEditRole);
@@ -116,7 +114,7 @@ function Box({ role, allMembers, edit, deleteRole, updateRole, sessionId, userId
 	return (
 		<>
 
-			<ContextMenu position={contextPos} show={showContext} options={[{ name: 'delete', onClick: () => onMemberDelete() }]} />
+			<ContextMenu position={contextPos} show={showContext} options={[{ name: 'delete', onClick:onMemberDelete }]} />
 			<ContextMenu position={contextPosHead} show={showContextHead} options={[{ name: 'delete role', onClick: () => { deleteRole(role.id); setShowContextHead(false) } }]} />
 			<RoleModel role={role} canEdit={edit} open={roleModel} setOpen={(val) => setRoleModel(val)} updateRole={updateRole} sessionId={sessionId} userId={userId} />
 
@@ -175,6 +173,12 @@ function Members() {
 			setRoles(roles.filter(role => role.id != id));
 	}
 
+	const onCreateRole = async () => {
+		const newRole = await axios.post(`${config.backend}/role/create`); 
+		console.log(newRole.data);
+		setRoles([...roles, newRole.data]);
+	} 
+
 	const updateRolePermission = async (id, newRole) => {
 		const idx = roles.findIndex(role => role.id === id);
 		const newRoles = [...roles];
@@ -190,13 +194,14 @@ function Members() {
 		<div className="participants">
 			{/* <SelectBox box={selectBox}/> */}
 			<div className="m-heading">Members</div>
-			<div style={{ width: `${roles.length * 25}%` }}>
+			<div style={{ width: `${(roles.length + 1)* 25}%` }}>
 				<div className="container-fluid" >
 					<div className="row">
 						{
 							roles.map((role) => (<Box role={role} edit={editPermission} allMembers={members} deleteRole={deleteRole} updateRole={updateRolePermission}
 								sessionId={sessionId} userId={userId} />))
 						}
+						<div className="create-box col " onClick={() => onCreateRole()}>+Create</div>
 					</div>
 				</div>
 

@@ -42,7 +42,7 @@ function Session() {
     <>
       <div className='session-wrapper container-fluid'>
         <div className='row'>
-          <Sidebar key='list' userName={'@hello_friend'}sesssionId={1} title='Session 1' selected={currentContent} selectContent={setCurrentContent} />
+          <Sidebar key='list' userName={'hello_friend'} sesssionId={1} title='Session 1' selected={currentContent} selectContent={setCurrentContent} />
           <div className='content-wrapper col-sm-10 p-0'>
             {Content('content', currentContent.props)}
           </div>

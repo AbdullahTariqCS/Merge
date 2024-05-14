@@ -230,7 +230,7 @@ function Relations({ relation, setRelation, currentAttribs, currentRelations, in
           </div>
           {
             select.table.show &&
-            <Select position={select.table.pos} list={Tables} onSelectValue={(val) => setRelation} />
+            <Select position={select.table.pos} list={Tables} onSelectValue={(val) => setRelation(val)} />
           }
         </div>
 

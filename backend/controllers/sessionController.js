@@ -18,8 +18,41 @@ const sidebar = async (req, res) => {
   res.json(data); 
 };
 
+const sessionCreate = async (req, res) => {
+  const newSession ={id: 0, name: '(new session)', description: ''}; 
+
+  res.json(newSession); 
+}
+
+const sessionDelete = async (req, res) => {
+  const {sessionId} = req.body; 
+  
+  console.log('delete request for ', sessionId); 
+  res.sendStatus(200); 
+}
+
+const detail = async(req, res) => {
+  const sessionId = req.query.sessionId; 
+  const detail = {name: 'Session', description: 'hello'}; 
+
+
+  res.json(detail); 
+}
+
+const detailUpdate = async(req, res) => {
+  const {sessionId, detail} = req.body; 
+  console.log(sessionId, detail); 
+
+  res.sendStatus(200); 
+}
+
+
+
 module.exports = {
     index, 
-    sidebar
-
+    sidebar, 
+    sessionCreate,
+    sessionDelete, 
+    detail, 
+    detailUpdate
 };

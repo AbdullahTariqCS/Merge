@@ -52,6 +52,7 @@ const getData = async (req, res) => {
 
 const addTuplePost = async (req, res) => {
 
+
   const { attribs } = req.body;
   const newTuple = {
     tupleId: 1, //generating uuid
@@ -66,6 +67,7 @@ const addTuplePost = async (req, res) => {
     ]
   })
 
+  console.log('new tuple generated', newTuple);
   res.send(newTuple);
 
 };
@@ -106,9 +108,9 @@ const createTable = async (req, res) => {
 };
 
 const deleteTable = async (req, res) => {
-  const tableId = req.query.table_id;
+  const {tableId }= req.body;
   console.log(`Delete table route accessed for table ID: ${tableId}`);
-  res.send(`Delete table route accessed for table ID: ${tableId}`);
+  res.sendStatus(200); 
 };
 
 const updateTable = async (req, res) => {

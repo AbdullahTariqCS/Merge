@@ -5,7 +5,7 @@ const index = async (req, res) => {
   // console(userId, sessionId);
 
   const data = {
-    editPermission: true,
+    editPermission: false,
     roles: [
       {
         id: 1,
@@ -66,26 +66,44 @@ const index = async (req, res) => {
 
 
 
-const deleteRole = async(req, res) => {
+const deleteRole = async (req, res) => {
 
-  const {roleId} = req.query;
-  console.log('delete role ', roleId, ' changed to ', role); 
+  const { roleId } = req.body;
+  console.log('delete role ', roleId);
 
-  res.json({canDelete: true}); 
+  res.json({ canDelete: true });
 }
 
 const updateRole = async (req, res) => {
   // const roleId = req.params.role_id;
-  const {roleId, role} = req.body;
-  console.log('role ', roleId, ' changed to ', role); 
+  const { roleId, role } = req.body;
+  console.log('role ', roleId, ' changed to ', role);
 
   res.sendStatus(200)
 
 };
 
+const createRole = async (req, res) => {
+
+  console.log('Create role request'); 
+  const newRole = {
+    id: 5,//generate uuid
+    name: '(role)',
+    color: 'green',
+
+    membersPermission: { view: false, edit: false },
+    createTable: false,
+    tablesPermission: { view: [], edit: [] },
+    members: []
+  };
+  res.json(newRole); 
+
+};
+
 
 module.exports = {
+  createRole, 
   updateRole,
-  deleteRole, 
+  deleteRole,
   index
 };

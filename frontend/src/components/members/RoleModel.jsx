@@ -151,8 +151,8 @@ function RoleModel({ open, setOpen, canEdit, role, sessionId, userId, updateRole
       }
     })
   }
-  const deleteEditTables = () => {
 
+  const deleteEditTables = () => {
     if (!canEdit || editSelectedItems.length === 0)
       return
     updateRole(role.id, {
@@ -168,13 +168,18 @@ function RoleModel({ open, setOpen, canEdit, role, sessionId, userId, updateRole
 
     return (
       <>
-        <ContextMenu position={viewCmPos} show={showViewCm} options={[{ name: 'delete', onClick: deleteViewTables }]} />
-        <ContextMenu position={editCmPos} show={showEditCm} options={[{ name: 'delete', onClick: deleteEditTables }]} />
+        {
+          canEdit && <ContextMenu position={viewCmPos} show={showViewCm} options={[{ name: 'delete', onClick: deleteViewTables }]} />
+
+        }
+        {
+          canEdit && <ContextMenu position={editCmPos} show={showEditCm} options={[{ name: 'delete', onClick: deleteEditTables }]} />
+        }
         <div className='role-model'>
           <div className='container-fluid row d-flex align-items-center mb-3'>
             <div className='m-primary role-heading col-sm-3' >Name</div>
-            <input className='m-primary role-model-input col-sm-4' defaultValue={role.name}
-              onBlur={(e) => updateRole(role.id, {...role, name: e.target.value})}></input>
+            <input className='m-primary role-model-input col-sm-4' disabled={canEdit ? 'off' : 'on'} defaultValue={role.name}
+              onBlur={(e) => updateRole(role.id, { ...role, name: e.target.value })}></input>
           </div>
 
           <div className='container-fluid row d-flex align-items-center mb-4'>
