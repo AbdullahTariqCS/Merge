@@ -34,39 +34,52 @@ function SidebarView(props) {
     </li>
   )
 }
+
+
 function Sidebar({ sessionId, userName, title, selectContent, selected, }) {
   const [login, setLogin] = useState(false);
+  const [data, setData] = useState({
+    Members: { view: false, edit: false },
+    CreateTable: false,
+    tables: [
+
+    ]
+  });
+  const [render, setRender] = useState(false);
   // const [selected, setSelected] = useState('view 1')
 
   //api/sidebar/
   //gets the table along with permissions. Also the permisstion to create table, and view
-  const data = {
-    Members: { view: true, edit: true },
-    CreateTable: true,
-    tables: [
-      { id: 1, title: 'Table 1', view: true, edit: true },
-      { id: 2, title: 'Table 2', view: true, edit: true },
-      { id: 3, title: 'Table 3', view: true, edit: true },
-    ]
-  };
 
   useEffect(() => {
-		const handleClickOutsideEditRole = (e) => {
-			if (!e.target.closest('.login')) {
-        setLogin(false);
-			}
-		};
-		document.addEventListener('mousedown', handleClickOutsideEditRole);
-		return () => {
-			document.removeEventListener('mousedown', handleClickOutsideEditRole);
-		};
-	}, []);
+    fetch('http://localhost:5000/api/session/sidebar')
+      .then((res) => res.json())
+      .then((data) => {
+        setData(data)
+        setRender(true);
+      })
+  }, [])
 
- 
+
+
+  useEffect(() => {
+    const handleClickOutsideEditRole = (e) => {
+      if (!e.target.closest('.login')) {
+        setLogin(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutsideEditRole);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutsideEditRole);
+    };
+  }, []);
+
+
+
   return (
     <>
       {
-        login && <LoginSignUp/> 
+        login && <LoginSignUp />
       }
       <div className='col-sm-2 p-3 sb '>
         <div className='title mb-3 mt-2' onClick={() => selectContent({ content_type: 'Welcome', props: {} })}>
@@ -81,7 +94,7 @@ function Sidebar({ sessionId, userName, title, selectContent, selected, }) {
           }
 
 
-          <hr className='pl-0 ml-0' style={{ border: '1px solid #fefefe90', width: '100%', overflow: 'none'}}></hr>
+          <hr className='pl-0 ml-0' style={{ border: '1px solid #fefefe90', width: '100%', overflow: 'none' }}></hr>
 
           <div className='sidebar-table-list'>
             {data.tables.map((listItem) => {

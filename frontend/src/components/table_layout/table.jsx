@@ -4,58 +4,66 @@ import Select from '../selectOption/selectOption';
 import Headers from './header'
 import './table_layout.css'
 import '../../assets/theme.css'
+import { ContextMenu, onContextClick, hideContext } from '../context_menu/context_menu'
+import config from '../../../config';
+import axios from 'axios';
+
+
 
 function Table(props) {
-  //  /api/layout/:layout_id
   const [tableData, setTableData] = useState(
     {
-      name: ` `,
-      editPermission: true,
+      name: '',
+      editPermission: false,
       configuration: {
         filter: { attrib: '', val: '' },
         sort: { attrib: '', asc: true },
         expanded: false,
       },
       attribs: [
-        { id: 0, name: 'Id', type: 'number', position: 0 },
-        { id: 1, name: 'Name', type: 'text', position: 1 },
-        { id: 2, name: 'Numbers', type: 'multi-value-number', position: 2 },
-        { id: 3, name: 'Hostels', type: 'multi-select-text', position: 3, options: ['Hostel 1', 'Hostel 2', 'Hostel 3'] },
-        { id: 4, name: 'Email Type', type: 'single-select-text', position: 4, options: ['Official Mail', 'Personal Mail'] },
       ],
       data: [
         {
           tupleId: 0,
           vals: [
-            { attrib_id: 0, value: '1' },
-            { attrib_id: 1, value: 'Boii' },
-            { attrib_id: 2, value: ['123'] },
-            { attrib_id: 3, value: ['Hostel 1'] },
-            { attrib_id: 4, value: 'Personal Mail' },
           ]
         },
       ]
     });
 
-  const [configuration, setConfiguration] = useState(tableData.configuration);
-  const onTupleCreate = () => {
-    //api/table/:table_id/addTuple/:t_id
-    //inserts data in data relation, referencing table relation and attribute relation, retriving attribute id and data id
-    //retrieves positions from layout relation through attribute id and layout id
-    //retrivees edit permission from 
 
-    //api/table/:table_id/tuple/:t_id
-    const newTuple = {
-      tupleId: 0,
-      vals: [
-        { attrib_id: 0, value: '' },
-        { attrib_id: 1, value: '' },
-        { attrib_id: 2, value: [] },
-        { attrib_id: 3, value: [] },
-        { attrib_id: 3, value: '' },
-      ]
-    };
-    setTableData({ ...tableData, data: [...tableData.data, newTuple] });
+  useEffect(() => {
+    fetch(`${config.backend}/table/data?tableId=${props.id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setTableData(data);
+      })
+  }, [])
+
+
+  const [configuration, setConfiguration] = useState(tableData.configuration);
+
+  useEffect(() => {
+    const onChange = async () => {
+      await axios.post(`${config.backend}/table/config/update`, { newConfiguration: configuration });
+    }
+    onChange();
+  }, [configuration]);
+
+  const onTupleCreate = async () => {
+    const { data } = await axios.post(`${config.backend}/table/tuple/add`, { attribs: tableData.attribs })
+    // const newTuple = {
+    //   tupleId: 0,
+    //   vals: [
+    //     { attrib_id: 0, value: '' },
+    //     { attrib_id: 1, value: '' },
+    //     { attrib_id: 2, value: [] },
+    //     { attrib_id: 3, value: [] },
+    //     { attrib_id: 3, value: '' },
+    //   ]
+    // };
+
+    setTableData({ ...tableData, data: [...tableData.data, data] });
   }
 
 
@@ -81,9 +89,19 @@ function Table(props) {
           <Head attribs={tableData.attribs} configuration={configuration} setConfiguration={setConfiguration} />
           <tbody className='body-wrapper'>
             {
-              tableData.data.map((tuple) => {
-                return <Tuple data={tuple.vals} id={tuple.id} attribs={tableData.attribs} permission={tableData.editPermission} expanded={configuration.expanded} />
-              })
+              tableData.data
+                .filter(tuple => {
+                  if (configuration.filter.attrib === '' || configuration.filter.val === '')
+                    return true;
+
+                  const attribId = tableData.attribs.find(attrib => attrib.name === configuration.filter.attrib).id;
+                  const data = tuple.vals.find(currentTuple => currentTuple.attrib_id === attribId);
+                  return Array.isArray(data.value) ? data.value.includes(configuration.filter.val) : data.value === configuration.filter.val;
+                })
+                .map((tuple) => {
+                  return <Tuple data={tuple.vals} id={tuple.tupleId} attribs={tableData.attribs}
+                    permission={tableData.editPermission} expanded={configuration.expanded} tableData={tableData} setTableData={setTableData} />
+                })
             }
             <tr className='create-tuple' onClick={() => onTupleCreate()}><td colSpan={tableData.attribs.length}>
               + Create
@@ -95,16 +113,40 @@ function Table(props) {
   )
 }
 
-function Tuple({ data, attribs, id, permission, expanded }) {
+function Tuple({ data, attribs, id, permission, expanded, tableData, setTableData }) {
+
+  const [contextPos, setContextPos] = useState({ x: 0, y: 0 });
+  const [showContext, setShowContext] = useState(false);
 
   const cellWidth = 100 / attribs.length;
   const style = (data.every(current_data => (Array.isArray(current_data.value) && current_data.value.length === 0) || current_data.value.trim().length === 0) ? { height: '50px' } : {})
 
-  // console.log(cellWidth);
+  const onDelete = async () => {
+    await axios.post(`${config.backend}/table/tuple/delete`, { tupleId: id });
+    setTableData({ ...tableData, data: tableData.data.filter(tuple => tuple.tupleId != id) });
+
+  }
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest('.context-menu')) {
+        setShowContext(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
     <>
+
       {
-        <tr className='container-fluid' style={style}>
+        <ContextMenu position={contextPos} show={showContext} options={[{ name: 'delete tuple', onClick: onDelete }]} />
+      }
+      {
+        <tr className='container-fluid' onContextMenu={(e) => onContextClick(e, setShowContext, setContextPos)} style={style}>
           {
             data.sort((a, b) => {
               // console.log(a, b)
@@ -114,7 +156,7 @@ function Tuple({ data, attribs, id, permission, expanded }) {
             }).map((data) => {
               const attrib = attribs.find(attrib => attrib.id === data.attrib_id)
               const options = attrib.options === undefined ? [] : attrib.options
-              return <Cell key={data.id} tupleId={id} attrib_id={data.attrib_id} value={data.value}
+              return <Cell key={data.attrib_id} tupleId={id} attrib_id={data.attrib_id} value={data.value}
                 options={options} permission={permission} type={attrib.type} cellWidth={cellWidth} expanded={expanded} />
             })
           }
@@ -127,14 +169,14 @@ function Tuple({ data, attribs, id, permission, expanded }) {
 function Head({ attribs, configuration, setConfiguration }) {
   // const cellWidth = { width: (props.data.length >= 4 ? '25%' : `${100 * (1 / props.length)}%`) };
 
-  const onClick = (attrib) => {
+  const onClick = async (attrib) => {
     if (configuration.sort.attrib === attrib && configuration.sort.asc === true)
       setConfiguration({ ...configuration, sort: { attrib: attrib, asc: !configuration.sort.asc } });
     else if (configuration.sort.attrib === attrib && configuration.sort.asc === false)
       setConfiguration({ ...configuration, sort: { attrib: '', asc: !configuration.sort.asc } });
     else
       setConfiguration({ ...configuration, sort: { attrib: attrib, asc: true } });
-    console.log(configuration);
+
   }
 
   return (
@@ -166,7 +208,8 @@ function Head({ attribs, configuration, setConfiguration }) {
 }
 
 Cell.propTypes = {
-  id: PropTypes.number,
+  attrib_id: PropTypes.string,
+  tupleId: PropTypes.string,
   value: PropTypes.string,
   permission: PropTypes.bool,
   cellWidth: PropTypes.number,
@@ -192,18 +235,48 @@ function Cell(props) {
   const [selectPos, setSelectPos] = useState({ x: 0, y: 0 });
   const cellRef = useRef(null);
 
-  const onSubmit = (newValue) => {
-    //middleware to check input
-    //if errors rerender the cell with an error list
+  const [contextPos, setContextPos] = useState({ x: 0, y: 0 });
+  const [showContext, setShowContext] = useState(false);
 
-    //api/data/:tuple_id/:attrib_id/val=new_value
-    console.log(`${props.id} changed to ${newValue}`)
+
+  const onSubmit = async (newValue) => {
+
+    if (props.type.includes('number') && !/^\d+$/.test(newValue))
+      return;
+
     if (props.type.includes('multi') && Array.isArray(value))
       setValue([...value, newValue]);
     else
       setValue(newValue)
+
+    console.log(newValue);
+    await axios.post(`${config.backend}/table/data/update`,
+      {
+        type: props.type,
+        attribId: props.attrib_id,
+        tupleId: props.tupleId,
+        value: newValue
+      });
+    console.log(`${props.attrib_id} changed to ${newValue}`)
     setClicked(false);
   };
+
+  const onDelete = async () => {
+    if (selectedItems.length === 0 || !Array.isArray(value)) return;
+    const deletedVals = value.filter((_, index) => selectedItems.includes(index));
+    console.log(deletedVals);
+
+    await axios.post(`${config.backend}/table/data/delete`, {
+      attribId: props.attrib_id,
+      tupleId: props.tupleId,
+      type: props.type,
+      value: deletedVals
+    });
+
+    setValue(value.filter(val => !deletedVals.includes(val)));
+    setSelectedItems([]);
+    setShowContext(false);
+  }
 
   const onClick = (e) => {
     if (!clicked && props.permission) {
@@ -264,7 +337,7 @@ function Cell(props) {
   //   };
   // }, [cellRef, clicked]);
 
-  useEffect(() =>{
+  useEffect(() => {
     const handleClickOutside = (e) => {
       if (!e.target.closest('.cell')) {
         setClicked(false);
@@ -277,10 +350,25 @@ function Cell(props) {
     };
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest('.context-menu')) {
+        setShowContext(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+
   // const value = props.type === 'multi-value' || props.type === 'multi-select' ? 
   if (clicked && (props.type.includes('select')))
     return (
-      <td className='cell' style={{ width: `${props.cellWidth}%` }} ref={cellRef}>
+      <td className='cell' onContextMenu={(e) => props.type.includes('multi') && onContextClick(e, setShowContext, setContextPos)}
+        style={{ width: `${props.cellWidth}%` }} ref={cellRef}>
+        {<ContextMenu show={showContext} position={contextPos} options={[{ name: 'delete', onClick: onDelete }]} />}
         {props.type.includes('multi') ?
           (<ul className='mb-2 ml-1 pl-0 list-unstyled'>
             {value.map((currentval, idx) => <li className={`cell-list-item ${selectedItems.includes(idx) ? 'm-primary' : 'm-secondary'}`} onClick={(e) => handleSelectList(idx, e.ctrlKey, e.shiftKey)}>{currentval}</li>)}
@@ -292,8 +380,9 @@ function Cell(props) {
 
   if (clicked)
     return (
-      <td className='cell' style={{ width: `${props.cellWidth}%` }} ref={cellRef}>
-        <form onSubmit={(e) => {
+      <td className='cell' onContextMenu={(e) => props.type.includes('multi') && onContextClick(e, setShowContext, setContextPos)} style={{ width: `${props.cellWidth}%` }} ref={cellRef}>
+        {<ContextMenu show={showContext} position={contextPos} options={[{ name: 'delete', onClick: onDelete }]} />}
+        <div onSubmit={(e) => {
           e.preventDefault()
           onSubmit(e.target.elements.box.value)
         }
@@ -305,14 +394,16 @@ function Cell(props) {
                 {value.map((currentval, idx) => <li className={`cell-list-item ${selectedItems.includes(idx) ? 'm-primary' : 'm-secondary'}`} onClick={(e) => handleSelectList(idx, e.ctrlKey, e.shiftKey)}>{currentval}</li>)}
               </ul>
             }
-            <input type='text' id='box' className='form-control table-input' autoComplete='off' defaultValue={props.type.includes('multi') ? null : value} autoFocus />
+            <input type='text' id='box' className='form-control table-input' autoComplete='off'
+              defaultValue={props.type.includes('multi') ? null : value} autoFocus onKeyDown={(e) => e.key === 'Enter' && onSubmit(e.target.value)} />
           </div>
-        </form>
+        </div>
       </td>
     );
+
+
   return (
     // <td className='' style={{ width: `${props.cellWidth}%` }} onClick={onClick}>{value}</td>
-
     <td className='cell' style={{ height: '25px', overflowX: 'auto', maxWidth: `${props.cellWidth}%`, cursor: 'pointer' }} ref={cellRef} onClick={(e) => onClick(e)}>
       {Array.isArray(value) ?
         (

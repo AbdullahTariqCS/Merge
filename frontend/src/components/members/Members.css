@@ -1,5 +1,4 @@
-
-.participants{
+.participants {
     position: relative;
     height: 100vh;
     width: 100%;
@@ -8,45 +7,49 @@
     padding: 2rem;
 }
 
-.role-edit{
+.role-edit {
     opacity: 50%;
-    margin: 0; 
+    margin: 0;
     padding: 0;
 }
-.role-edit:hover{
+
+.role-edit:hover {
     opacity: 100%;
 }
-.role-edit::before{
-    width: auto; 
-    z-index: 0; 
+
+.role-edit::before {
+    width: auto;
+    z-index: 0;
 }
-.role-model{
+
+.role-model {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 700px; 
-    height: 550px; 
+    width: 700px;
+    height: 550px;
 
-    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5);
+    box-shadow: 0px 0px 10px 0px rgba();
     background-color: #222222;
     opacity: 100%;
     border-radius: 10px;
-    z-index: 25; 
+    z-index: 25;
 
     padding: 2rem;
 }
 
-.role-heading{
+.role-heading {
     font-size: large;
     font-weight: bold;
     /* margin-left: 2rem;  */
 }
-.role-model-input{
+
+.role-model-input {
     height: 38px;
     padding-bottom: 5px;
     padding-left: 1rem;
-    padding-top : 4px;
+    padding-top: 4px;
     /* padding-right: 1rem;
     margin-bottom: 1rem; */
     width: 100%;
@@ -56,25 +59,27 @@
     border-radius: 6px;
     cursor: pointer;
 }
-.role-box{
+
+.role-box {
     border: 1px solid #fefefe;
     border-radius: 10px;
     min-height: 30px;
     margin-right: 1rem;
-    padding: 1rem; 
+    padding: 1rem;
 
     overflow-y: auto;
     max-height: 210px;
     scrollbar-color: #646464 rgba(0, 0, 0, 0);
 }
-.role-model-background{
-    position: fixed; 
-    width: 100%; 
-    height: 100%; 
-    top: 0; 
-    left: 0; 
 
-    display: flex; 
+.role-model-background {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+
+    display: flex;
     align-items: center;
     justify-content: center;
     background-color: black;
@@ -106,12 +111,14 @@
 .role-button.selected {
     color: #222222;
     background-color: #fefefe;
-    font-weight: 500; 
+    font-weight: 500;
 }
-.role-button.selected:hover{
+
+.role-button.selected:hover {
     background-color: #fefefe80;
 }
-.box{
+
+.box {
     /* width: 95%;  */
     border: 1px solid #fefefe;
     border-radius: 10px;
@@ -119,52 +126,56 @@
     max-height: 330px;
     scrollbar-color: #646464 rgba(0, 0, 0, 0);
     list-style: none;
-    padding: 1rem; 
+    padding: 1rem;
     padding-left: 1.5rem;
     margin-bottom: 0.5rem;
 }
 
-.role-update{
-    position: fixed; 
-    top: 500px; 
-    left: 630px; 
-    width: 60px; 
+.role-update {
+    position: fixed;
+    top: 500px;
+    left: 630px;
+    width: 60px;
 }
-.box-name{
-   border-radius: 5px; 
-   padding: 0; 
-   margin: 0; 
-   margin-left: 1rem; 
-   margin-bottom: 5px;
-   font-weight: normal;
-   width: auto
-   
+
+.box-name {
+    border-radius: 5px;
+    padding: 0;
+    margin: 0;
+    margin-left: 1rem;
+    margin-bottom: 5px;
+    font-weight: normal;
+    width: auto;
+    cursor: pointer;
+
 }
-.box-item{
-    cursor: pointer !important;    
-    position: relative; 
+
+.box-item {
+    cursor: pointer !important;
+    position: relative;
     padding-left: 0.5rem;
     user-select: none;
 }
 
-.box-item:hover{
-    color: #fefefe; 
+.box-item:hover {
+    color: #fefefe;
 }
 
-.unselected{
+.unselected {
     color: #919191;
 }
 
-.add-member{
-    font-size: medium; 
-    font-weight: bold; 
-    padding-top: 0; 
+.add-member {
+    font-size: medium;
+    font-weight: bold;
+    padding-top: 0;
     margin-left: 1rem;
-    width: 40%; 
-    height: 10%; 
+    width: 40%;
+    height: 10%;
     color: #5a5a5a;
     cursor: pointer;
 }
-.add-member:hover{
-    color:#fefefea5;
+
+.add-member:hover {
+    color: #fefefea5;
 }

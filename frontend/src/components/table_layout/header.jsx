@@ -107,7 +107,7 @@ function Filter({ position, attribs, setFilterSelect, configuration, setConfigur
     <div className='filter' style={{ top: position.y + 'px', left: position.x + 'px' }}>
       <div className='filter-input-select m-primary' style={{ cursor: 'pointer' }} onClick={(e) => onClick(e)}>{filter.attrib}</div>
 
-      {select && <Select position={selectPos} onSelectValue={(val) => setFilter({ attrib: val, value: '' })}
+      {select && <Select position={selectPos} onSelectValue={(val) => setFilter({ attrib: val, val: '' })}
         list={attribs.map(attrib => attrib.name)} />}
 
       <input id='fif' className='filter-input-select' defaultValue={configuration.filter.val} autoComplete='off'

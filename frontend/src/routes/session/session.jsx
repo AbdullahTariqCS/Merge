@@ -12,9 +12,9 @@ import './session.css'
 
 const contentCash = {content_typ: 'Welcome', props: {}};
 const ContentList = {
-  View: (key, props) => (<View key={key} propsObject={props} />),
-  Welcome: (key, props) => (<Welcome key={key} />),
-  TableCreate: (key, props) => (<TableCreate key={key}/>), 
+  View: (key, props) => <View key={key} propsObject={props} />,
+  Welcome: (key, props) => <Welcome key={key} />,
+  TableCreate: (key, props) => <TableCreate key={key}/>, 
   TableIndex: (key, props) => (<TableIndex key={key}/>), 
   Members: (key, props) => (<Members key={key}/>), 
   Import: (key, props) => (<Import key={key} propsObject={props}/>), 
@@ -27,10 +27,11 @@ function Session() {
   const {search} = useLocation(); 
   const params = new URLSearchParams(search); 
   const sessionId = params.get('sessionId'); 
-  console.log(sessionId); 
+  // console.log(sessionId); 
 
   const [currentContent, setCurrentContent] = useState({ content_type: 'Welcome', props: {} });
   const Content = ContentList[currentContent.content_type]
+
 
   // const setContent = (newContent) =>
   //   contentCash = newContent; 
