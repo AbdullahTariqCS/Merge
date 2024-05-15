@@ -40,7 +40,7 @@ function Login({ setLogin }) {
 
 
   if (loggedIn)
-    return (<Navigate to='/home' />)
+    return (<Navigate to={`/home?username=${info.userName}`} />)
   return (
     <>
       <p className='m-primary login-label d-flex align-items-center'>Login</p>
@@ -49,11 +49,11 @@ function Login({ setLogin }) {
       {
         error.userName && <div className='login-error-message'>username does not exists</div>
       }
-      <input className={`m-primary ${error.password && 'login-error'} login-input`} style={error.userName ? { marginTop: '0.75rem' } : {}} placeholder='Password'
+      <input type='password' className={`m-primary ${error.password && 'login-error'} login-input`} style={error.userName ? { marginTop: '0.75rem' } : {}} placeholder='Password'
         value={info.password} onChange={(e) => setInfo({ ...info, password: e.target.value.trim() })}></input>
 
       {
-        error.password && <div className='login-error-message'>password does not exists</div>
+        error.password && <div className='login-error-message'>incorrect password</div>
       }
 
       < div className='container-fluid row p-0 m-0 mt-4' autoSelect='off'>
@@ -85,7 +85,7 @@ function SignUp({ setLogin }) {
   }
 
   if(signUp)
-    return <Navigate to={`/home?userName=${info.userName}`}/>
+    return <Navigate to={`/home?username=${info.userName}`}/>
   return (
     <>
       <p className='m-primary login-label d-flex align-items-center mb-4'>Sign Up</p>
@@ -94,10 +94,10 @@ function SignUp({ setLogin }) {
       {
         error.userName && <div className='login-error-message mt-1'>username isen't available</div>
       }
-      <input className={`m-primary login-input ${error.password && 'login-error'}`} style={error.userName ? { marginTop: '0.75rem' } : {}}
+      <input type='password' className={`m-primary login-input ${error.password && 'login-error'}`} style={error.userName ? { marginTop: '0.75rem' } : {}}
         placeholder='Password' onChange={(e) => setInfo({...info, password: e.target.value.trim()})}></input>
 
-      <input className={`m-primary login-input ${error.password ? 'login-error' : 'mb-4'}`}
+      <input type='password' className={`m-primary login-input ${error.password ? 'login-error' : 'mb-4'}`}
         placeholder='Confirm Password' onChange={(e) => setInfo({...info, confirmPassword: e.target.value.trim()})}></input>
       {
         error.password && <div className='login-error-message mt-1 mb-3'>password do not match</div>

@@ -13,7 +13,7 @@ import './session.css'
 const contentCash = {content_typ: 'Welcome', props: {}};
 const ContentList = {
   View: (key, props) => <View key={key} propsObject={props} />,
-  Welcome: (key, props) => <Welcome key={key} />,
+  Welcome: (key, props) => <Welcome key={key} propsObject={props}/>,
   TableCreate: (key, props) => <TableCreate key={key}/>, 
   TableIndex: (key, props) => (<TableIndex key={key}/>), 
   Members: (key, props) => (<Members key={key}/>), 
@@ -29,7 +29,7 @@ function Session() {
   const sessionId = params.get('sessionId'); 
   // console.log(sessionId); 
 
-  const [currentContent, setCurrentContent] = useState({ content_type: 'Welcome', props: {} });
+  const [currentContent, setCurrentContent] = useState({ content_type: 'Welcome', props: {title: null} });
   const Content = ContentList[currentContent.content_type]
 
 
@@ -43,7 +43,7 @@ function Session() {
       <div className='session-wrapper container-fluid'>
         <div className='row'>
           <Sidebar key='list' userName={'hello_friend'} sesssionId={1} title='Session 1' selected={currentContent} selectContent={setCurrentContent} />
-          <div className='content-wrapper col-sm-10 p-0'>
+          <div className='content-wrapper col-sm-10 m-0 p-0'>
             {Content('content', currentContent.props)}
           </div>
         </div>

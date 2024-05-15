@@ -1,11 +1,37 @@
-const index = async(req, res) => {
-    const session_id = req.query.session_id;
-    console.log(`session index: ${session_id}`);
-    res.send(`session index: ${session_id}`);
+const knexConfig = require("../knexConfig");
+const { v4: uuidv4 } = require('uuid');
+const knex = require('knex');
+const Knex = knex(knexConfig);
+
+const index = async (req, res) => {
+  const username = req.query.username;
+  const knexQuery = `Select * from sessions 
+  where sessions.session_id in (
+      Select r.session_id from roles r, users u, roles_members rm 
+      where rm.role_id = r.role_id and rm.username = :username 
+      group by r.session_id 
+  ); `
+
+  const query = await Knex.raw(knexQuery, {
+    username: username
+  })
+  const sessions = query.rows.map((row) => {
+    return {
+      id: row.session_id,
+      name: row.session_name,
+      description: row.description
+    }
+  })
+  res.json({ sessions: sessions });
+
 };
 
 const sidebar = async (req, res) => {
+  const sessionId = req.query.sessionId;
+  const username = req.query.username;
+
   const data = {
+    name: '',
     Members: { view: true, edit: true },
     CreateTable: true,
     tables: [
@@ -15,44 +41,136 @@ const sidebar = async (req, res) => {
     ]
   };
 
-  res.json(data); 
+  console.log(username, sessionId);
+
+  const permissionQuery = await Knex.raw(
+    `Select * from roles r, roles_members rm
+    where rm.role_id = r.role_id and rm.username= :username and r.session_id = :session_id`, {
+    username: username,
+    session_id: sessionId
+  });
+
+  const viewTablesQuery = await Knex.raw(
+    `Select t_id from roles_table_view rt, roles r, roles_members rm 
+    where rt.role_id = r.role_id and r.role_id = rm.role_id and rm.username= :username and r.session_id = :session_id
+    group by t_id`, {
+    username: username,
+    session_id: sessionId
+  });
+
+  const editTablesQuery = await Knex.raw(
+    `Select t_id from roles_table_edit rt, roles r, roles_members rm 
+    where rt.role_id = r.role_id and r.role_id = rm.role_id and rm.username= :username and r.session_id = :session_id
+    group by t_id`, {
+    username: username,
+    session_id: sessionId
+  });
+
+  const nameQuery = await Knex.raw('Select session_name from sessions where session_id = :session_id', {
+    session_id: sessionId
+  });
+
+  const tableQuery = await Knex.raw(`Select t_name, t_id from tables_ where session_id= :session_id`, {
+    session_id: sessionId,
+  });
+
+  const queryData = {
+    name: nameQuery.rows[0].session_name, 
+    Members: {view: permissionQuery.rows[0].role_view, edit: permissionQuery.rows[0].role_edit}, 
+    CreateTable: permissionQuery.rows[0].table_create, 
+    tables: tableQuery.rows.map(table => {
+
+      return {
+        id: table.t_id, 
+        title: table.t_name, 
+        view: viewTablesQuery.rows.map(row => row.t_id).includes(table.t_id), 
+        edit: editTablesQuery.rows.map(row => row.t_id).includes(table.t_id), 
+      }
+    })
+  }
+
+  console.log(queryData);
+
+  res.json(queryData);
 };
 
 const sessionCreate = async (req, res) => {
-  const newSession ={id: 0, name: '(new session)', description: ''}; 
+  const username = req.body.username;
+  const newSession = { id: uuidv4(), name: '(new session)', description: '' };
 
-  res.json(newSession); 
+  await Knex.raw('Insert into sessions (session_id, session_name, description) values (:session_id, :session_name, :description) ', {
+    session_id: newSession.id,
+    session_name: newSession.name,
+    description: newSession.description,
+  })
+
+  const newRole = uuidv4();
+  await Knex.raw('Insert into roles (role_id, session_id, table_create, role_view, role_edit) values (:role_id, :session_id, true, true, true)', {
+    role_id: newRole,
+    session_id: newSession.id
+  })
+
+
+  await Knex.raw('Insert into roles_members (role_id, username) values (:role_id, :username )', {
+    role_id: newRole,
+    username: username
+  })
+
+  console.log('queries ran successfully');
+  res.json(newSession);
 }
 
 const sessionDelete = async (req, res) => {
-  const {sessionId} = req.body; 
-  
-  console.log('delete request for ', sessionId); 
-  res.sendStatus(200); 
+  const { sessionId } = req.body;
+  console.log('delete request for ', sessionId);
+
+  await Knex.raw('Delete from sessions where session_id = :sessionId', {
+    sessionId: sessionId,
+  })
+
+  console.log("Delete session query ran successfully");
+  res.sendStatus(200);
 }
 
-const detail = async(req, res) => {
-  const sessionId = req.query.sessionId; 
-  const detail = {name: 'Session', description: 'hello'}; 
+const detail = async (req, res) => {
+  const sessionId = req.query.sessionId;
+  // const detail = {name: 'Session', description: 'hello'}; 
+
+  const query = await Knex.raw('Select * from sessions where session_id = :sessionId', {
+    sessionId: sessionId
+  });
+
+  const detail = {
+    name: query.rows[0].session_name,
+    description: query.rows[0].description
+  }
+  console.log(detail);
 
 
-  res.json(detail); 
+  res.json(detail);
 }
 
-const detailUpdate = async(req, res) => {
-  const {sessionId, detail} = req.body; 
-  console.log(sessionId, detail); 
+const detailUpdate = async (req, res) => {
+  const { sessionId, detail } = req.body;
+  console.log(sessionId, detail);
 
-  res.sendStatus(200); 
+  const query = await Knex.raw('Update sessions set session_name = :name, description = :description where session_id = :sessionId', {
+    sessionId: sessionId,
+    name: detail.name,
+    description: detail.description
+  });
+
+  console.log('Detail update query ran successfully');
+  res.sendStatus(200);
 }
 
 
 
 module.exports = {
-    index, 
-    sidebar, 
-    sessionCreate,
-    sessionDelete, 
-    detail, 
-    detailUpdate
+  index,
+  sidebar,
+  sessionCreate,
+  sessionDelete,
+  detail,
+  detailUpdate
 };

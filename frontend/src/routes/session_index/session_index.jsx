@@ -9,26 +9,35 @@ import axios from 'axios'
 function SessionIndex() {
   //api/session/index
 
-  const [sessions, setSessions] = useState([
-    { id: 0, name: 'Session 1', description: 'hello world' },
-    { id: 1, name: 'Session 2', description: 'hello world' },
-    { id: 2, name: 'Session 3', description: 'hello world' },
-  ]);
+  const params = new URLSearchParams(window.location.search);
+  const username = params.get('username');
+
+  console.log(username);
+  const [sessions, setSessions] = useState([{ create: true }]);
+  useEffect(() => {
+    fetch(`${config.backend}/session/index?username=${username}`)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data);
+        setSessions([...data.sessions, {create: true}])
+      })
+  }, [])
 
   const onCreate = async (id) => {
-    const response = await axios.post(`${config.backend}/session/create`);
+    const response = await axios.post(`${config.backend}/session/create`, { username: username });
     const newsession = [...sessions];
     newsession[newsession.length - 1] = response.data;
     setSessions([...newsession, { create: true }]);
   }
 
   const onDelete = async (id) => {
-    await axios.post(`${config.backend}/session/delete`, {sessionId: id});
-    console.log(sessions.filter(session => session.id != id)); 
-    setSessions(sessions.filter(session => session.id != id)); 
+    await axios.post(`${config.backend}/session/delete`, { sessionId: id });
+    console.log(sessions.filter(session => session.id != id));
+    setSessions(sessions.filter(session => session.id != id));
   }
 
-  useEffect(() => sessions[sessions.length - 1].create === undefined && setSessions([...sessions, { create: true, onCreate: onCreate }]), []);
+  // useEffect(() => (sessions[sessions.length - 1].create === undefined)&& setSessions([...sessions, { create: true, onCreate: onCreate }]), []);
+
 
   return (
     <div className='session-index m-background'>
@@ -39,9 +48,9 @@ function SessionIndex() {
           return (
             <div className='container-fluid row pl-5 pr-5'>
               <Session session={sessions[4 * idx]} onCreate={onCreate} onDelete={onDelete} />
-              {sessions.length > 4 * idx + 1 ? <Session session={sessions[4 * idx + 1]} onCreate={onCreate} onDelete={onDelete}/> : <div className='col-sm-3' ></div>}
-              {sessions.length > 4 * idx + 2 ? <Session session={sessions[4 * idx + 2]} onCreate={onCreate} onDelete={onDelete}/> : <div className='col-sm-3' ></div>}
-              {sessions.length > 4 * idx + 3 ? <Session session={sessions[4 * idx + 3]} onCreate={onCreate} onDelete={onDelete}/> : <div className='col-sm-3' ></div>}
+              {sessions.length > 4 * idx + 1 ? <Session session={sessions[4 * idx + 1]} onCreate={onCreate} onDelete={onDelete} /> : <div className='col-sm-3' ></div>}
+              {sessions.length > 4 * idx + 2 ? <Session session={sessions[4 * idx + 2]} onCreate={onCreate} onDelete={onDelete} /> : <div className='col-sm-3' ></div>}
+              {sessions.length > 4 * idx + 3 ? <Session session={sessions[4 * idx + 3]} onCreate={onCreate} onDelete={onDelete} /> : <div className='col-sm-3' ></div>}
             </div>
           )
         })
@@ -57,6 +66,9 @@ function Session({ session, onCreate, onDelete }) {
   const [showCm, setShowCm] = useState(false);
   const [cmPos, setCmPos] = useState({ x: 0, y: 0 });
 
+
+  const params = new URLSearchParams(window.location.search);
+  const username = params.get('username');
 
   useEffect(() => {
     const handleClickOutsideEditRole = (e) => {
@@ -74,12 +86,12 @@ function Session({ session, onCreate, onDelete }) {
     return <SessionCreate onCreate={onCreate}></SessionCreate>
 
   if (sessionSelected)
-    return <Navigate to={`/session?sessionId=${session.id}`} />
+    return <Navigate to={`/session?sessionId=${session.id}&username=${username}`} />
 
   return (
     <>
-      <ContextMenu position={cmPos} show={showCm} options={[{name: 'delete', onClick:() => {onDelete(session.id); setShowCm(false)}}]} />
-      <div className='session-box col' onContextMenu={(e) => {onContextClick(e, setShowCm, setCmPos)}} onClick={(e) => setSessionSelected(true)}>
+      <ContextMenu position={cmPos} show={showCm} options={[{ name: 'delete', onClick: () => { onDelete(session.id); setShowCm(false) } }]} />
+      <div className='session-box col' onContextMenu={(e) => { onContextClick(e, setShowCm, setCmPos) }} onClick={(e) => setSessionSelected(true)}>
         <p className='session-label m-primary'>{session.name}</p>
         <div className='session-description m-primary'>
           <p className='mb-3' style={session.description === '' ? { fontStyle: 'italic' } : {}}>

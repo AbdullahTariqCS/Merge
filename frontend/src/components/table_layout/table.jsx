@@ -14,7 +14,6 @@ function Table(props) {
   const [tableData, setTableData] = useState(
     {
       name: '',
-      editPermission: false,
       configuration: {
         filter: { attrib: '', val: '' },
         sort: { attrib: '', asc: true },
@@ -100,7 +99,7 @@ function Table(props) {
                 })
                 .map((tuple) => {
                   return <Tuple data={tuple.vals} id={tuple.tupleId} attribs={tableData.attribs}
-                    permission={tableData.editPermission} expanded={configuration.expanded} tableData={tableData} setTableData={setTableData} />
+                    permission={props.edit} expanded={configuration.expanded} tableData={tableData} setTableData={setTableData} />
                 })
             }
             <tr className='create-tuple' onClick={() => onTupleCreate()}><td colSpan={tableData.attribs.length}>

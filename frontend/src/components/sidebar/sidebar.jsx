@@ -51,7 +51,7 @@ function SidebarView(props) {
       <ContextMenu position={cmPos} show={showCm} options={[{ name: 'delete', onClick: () => { props.deleteTable(props.id); setShowCm(false) } }]} />
       <li className="nav-item mb-1">
         <a className={`m-primary nav-link${props.item.id == props.selected ? ' active' : ''}`} data-toggle="pill"
-          onClick={() => props.select({ content_type: 'View', props: { id: props.item.id, selectContent: props.select } })} role="tab"
+          onClick={() => props.select({ content_type: 'View', props: { id: props.item.id, title: props.item.title, edit:props.item.edit, selectContent: props.select } })} role="tab"
           onContextMenu={(e) => onContextClick(e, setShowCm, setCmPos, 90)}
         >
           {props.item.title}
@@ -62,19 +62,20 @@ function SidebarView(props) {
 }
 
 
-function Sidebar({userName, title, selectContent, selected, }) {
+function Sidebar({ userName, title, selectContent, selected, }) {
   const [login, setLogin] = useState(false);
   const [showCm, setShowCm] = useState(false);
   const [cmPos, setCmPos] = useState({ x: 0, y: 0 });
   const [nav, setNavigate] = useState('');
   const [edit, setEdit] = useState(false);
 
-  const params = new URLSearchParams(window.location.search); 
-  const sessionId = params.get('sessionId');  
+  const params = new URLSearchParams(window.location.search);
+  const sessionId = params.get('sessionId');
+  const username = params.get('username'); 
 
 
   const cmOptions = [
-    { name: 'Home', onClick: () => setNavigate(`/home?userId=${userName}`) },
+    { name: 'Home', onClick: () => setNavigate(`/home?username=${userName}`) },
     { name: 'Switch Account', onClick: () => { setLogin(true); setShowCm(false) } },
     { name: 'Logout', onClick: () => { setNavigate('/login') } },
   ]
@@ -93,7 +94,7 @@ function Sidebar({userName, title, selectContent, selected, }) {
 
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/session/sidebar')
+    fetch(`http://localhost:5000/api/session/sidebar?sessionId=${sessionId}&username=${username}`)
       .then((res) => res.json())
       .then((data) => {
         setData(data)
@@ -139,12 +140,12 @@ function Sidebar({userName, title, selectContent, selected, }) {
         login && <LoginSignUp />
       }
       {
-        edit && <Edit sessionId={sessionId} setEdit={setEdit}/>
+        edit && <Edit sessionId={sessionId} setEdit={setEdit} />
       }
-      <div className='col-sm-2 p-3 sb '>
+      <div className='col-sm-2 m-0 p-3 sb '>
 
         <div className={`container-fluid row box-name p-0 d-flex align-items-center`} >
-          <div className='title mb-3 mt-2 ml-0 pl-0' onClick={() => selectContent({ content_type: 'Welcome', props: {} })}>{title}</div>
+          <div className='title mb-3 mt-2 ml-0 pl-0' onClick={() => selectContent({ content_type: 'Welcome', props: {title: data.name} })}>{data.name}</div>
           <i className="role-edit fas fa-pencil-alt m-primary col justify-content-end" style={{ fontSize: 'small' }} onClick={() => setEdit(true)} />
         </div>
 
@@ -159,8 +160,8 @@ function Sidebar({userName, title, selectContent, selected, }) {
           <hr className='pl-0 ml-0' style={{ border: '1px solid #fefefe90', width: '100%', overflow: 'none' }}></hr>
 
           <div className='sidebar-table-list'>
-            {data.tables.map((listItem) => {
-              return <SidebarView key={listItem.title} id={listItem.id} deleteTable={deleteTable} item={listItem} selected={selected.props.id === undefined ? -1 : selected.props.id} select={selectContent} />
+            {data.tables.filter(item => item.view).map((listItem) => {
+              return <SidebarView key={listItem.title} title={listItem.title} edit={listItem.edit} id={listItem.id} deleteTable={deleteTable} item={listItem} selected={selected.props.id === undefined ? -1 : selected.props.id} select={selectContent} />
               // return <SidebarItem key={listItem.title} item={listItem} selected = {props.selected.props.id === undefined? -1 : props.selected.props.id} select={props.selectContent}/>
             })}
             {
@@ -170,11 +171,11 @@ function Sidebar({userName, title, selectContent, selected, }) {
           <div className='user-name m-primary container-fluid pl-4 row d-flex align-items-center'
             onContextMenu={(e) => onContextClick(e, setShowCm, setCmPos, 0, -120)}>
             <i className='far fa-user p-2 pr-0'></i>
-            <div className=''>{userName}</div>
+            <div className=''>{username}</div>
           </div>
         </ul>
       </div>
-
+      
     </>
   )
 
@@ -182,19 +183,19 @@ function Sidebar({userName, title, selectContent, selected, }) {
 
 function Edit({ sessionId, setEdit }) {
 
-  const [session, setSession] = useState({ name: 'hello', description: '' });
+  const [session, setSession] = useState({ name: '', description: '' });
 
   useEffect(() => {
-    fetch(`${config.backend}/session/detail`)
-    .then(res => res.json())
-    .then(data => {
-      setSession(data); 
-    })
+    fetch(`${config.backend}/session/detail?sessionId=${sessionId}`)
+      .then(res => res.json())
+      .then(data => {
+        setSession(data);
+      })
   }, [])
 
-  const onSubmit = async() => {
-    await axios.post(`${config.backend}/session/detail/update`, {sessionId: sessionId, detail : session}); 
-    setEdit(false);   
+  const onSubmit = async () => {
+    await axios.post(`${config.backend}/session/detail/update`, { sessionId: sessionId, detail: session });
+    setEdit(false);
   }
 
   return (

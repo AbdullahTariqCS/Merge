@@ -6,16 +6,16 @@ import Table from '../../components/table_layout/table';
 
 function View(props) {
 
-  const { id, selectContent } = props.propsObject;
+  const { title, id, edit, selectContent } = props.propsObject;
 
   return (
 
     <>
       <div className='view-wrapper' >
         <div className='view-title'>
-          {`Table ${id}`}
+          {title}
         </div>
-        <Table id={id} selectContent={selectContent} />
+        <Table id={id} edit={edit} title={title} selectContent={selectContent} />
       </div>
     </>
   )

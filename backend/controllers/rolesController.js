@@ -5,7 +5,7 @@ const index = async (req, res) => {
   // console(userId, sessionId);
 
   const data = {
-    editPermission: false,
+    editPermission: true,
     roles: [
       {
         id: 1,

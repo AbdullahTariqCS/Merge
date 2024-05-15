@@ -1,6 +1,7 @@
 .sb {
     min-height: 100vh;
     background-color: #131313;
+    width: 400px; 
 }
 
 .title {
@@ -35,7 +36,7 @@
     padding-bottom: 0.4rem;
     padding-left: 1rem;
     padding-right: 1rem;
-    color: #bdbdbd !important;
+    color: #bdbdbd !important
 }
 
 .nav-item>.nav-link {
