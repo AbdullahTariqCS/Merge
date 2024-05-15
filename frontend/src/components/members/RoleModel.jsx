@@ -8,9 +8,7 @@ import { ContextMenu, onContextClick } from '../context_menu/context_menu';
 
 function RoleModel({ open, setOpen, canEdit, role, sessionId, userId, updateRole }) {
 
-  //api/roles/:role_id/permissionj
 
-  const [fetched, setFetched] = useState(false);
   const [tables, setTables] = useState([]);
 
   const [showViewCm, setShowViewCm] = useState(false);
@@ -25,16 +23,12 @@ function RoleModel({ open, setOpen, canEdit, role, sessionId, userId, updateRole
       .then((res) => res.json())
       .then((data) => {
         setTables(data);
+        console.log(tables); 
       })
   }, [])
 
 
 
-  const stables = [
-    { id: 1, name: 'Table 1' },
-    { id: 2, name: 'Table 2' },
-    { id: 3, name: 'Table 3' },
-  ];
 
   const onUpdate = () => {
     //api/role/update/:role_id
@@ -176,11 +170,14 @@ function RoleModel({ open, setOpen, canEdit, role, sessionId, userId, updateRole
           canEdit && <ContextMenu position={editCmPos} show={showEditCm} options={[{ name: 'delete', onClick: deleteEditTables }]} />
         }
         <div className='role-model'>
-          <div className='container-fluid row d-flex align-items-center mb-3'>
-            <div className='m-primary role-heading col-sm-3' >Name</div>
-            <input className='m-primary role-model-input col-sm-4' disabled={canEdit ? 'off' : 'on'} defaultValue={role.name}
-              onBlur={(e) => updateRole(role.id, { ...role, name: e.target.value })}></input>
-          </div>
+          {
+            canEdit && 
+            <div className='container-fluid row d-flex align-items-center mb-3'>
+              <div className='m-primary role-heading col-sm-3' >Name</div>
+              <input className='m-primary role-model-input col-sm-4' defaultValue={role.name}
+                onBlur={(e) => updateRole(role.id, { ...role, name: e.target.value })}></input>
+            </div>
+          }
 
           <div className='container-fluid row d-flex align-items-center mb-4'>
             <div className='m-primary role-heading col-sm-3' >Color</div>

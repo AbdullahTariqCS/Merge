@@ -1,8 +1,13 @@
+const knexConfig = require('../knexConfig');
+const knex = require('knex');
+const Knex = knex(knexConfig);
+const { v4: uuidv4 } = require('uuid');
+const { createTable } = require('./tableController');
 const index = async (req, res) => {
-  // const userName = req.query.userName;
-  // const sessionId = req.query.sessionId;
+  const username = req.query.username;
+  const sessionId = req.query.sessionId;
 
-  // console(userId, sessionId);
+  console.log(username, sessionId);
 
   const data = {
     editPermission: true,
@@ -17,78 +22,110 @@ const index = async (req, res) => {
         tablesPermission: { view: [1, 2], edit: [1, 2] },
         members: ['name 1', 'name 2', 'name 3', 'name 4', 'name 5']
       },
-      {
-        id: 2,
-        name: 'Custom role 1',
-        color: 'cyan',
-
-        membersPermission: { view: true, edit: true },
-        createTable: true,
-        tablesPermission: { view: [1, 2], edit: [1, 2] },
-        members: ['name 1', 'name 2', 'name 3',]
-      },
-      {
-        id: 3,
-        name: 'Custome role 2',
-        color: 'red',
-
-        membersPermission: { view: true, edit: true },
-        createTable: true,
-        tablesPermission: { view: [1, 2], edit: [1, 2] },
-        members: ['name 1', 'name 2']
-
-      },
-      {
-        id: 4,
-        name: 'Custome role 3',
-        color: 'orange',
-        membersPermission: { view: true, edit: true },
-        createTable: true,
-        tablesPermission: { view: [1, 2], edit: [1, 2] },
-        members: ['name 1', 'name 2', 'name 3',]
-      },
     ],
     members: [
       'member 2',
       'member 3',
-      'member 4',
-      'member 5',
-      'member 5',
-      'member 5',
-      'member 5',
-      'member 5',
-      'member 5',
     ]
+  }
+
+  const roleQuery = await Knex.raw(`Select * from roles where session_id = :session_id`, { session_id: sessionId });
+
+  const userQuery = await Knex.raw(`Select username from users`);
+  const permissionQuery = await Knex.raw(
+    `Select r.role_edit from roles r, roles_members rm 
+    where rm.role_id = r.role_id and r.session_id = :session_id and rm.username = :username`,
+    {
+      session_id: sessionId,
+      username: username
+    });
+
+  const queryData = {
+    editPermission: permissionQuery.rows[0].role_edit,
+    roles: await Promise.all(roleQuery.rows.map(async (role) => {
+      const viewQuery = await Knex.raw('Select t_id from roles_table_view where role_id = :role_id group by t_id', { role_id: role.role_id });
+      const editQuery = await Knex.raw('Select t_id from roles_table_edit where role_id = :role_id group by t_id', { role_id: role.role_id });
+      const roleMemberQuery = await Knex.raw('Select username from roles_members where role_id = :role_id group by username', { role_id: role.role_id });
+
+      return {
+        id: role.role_id,
+        name: role.role_name,
+        color: role.color,
+        membersPermission: { view: role.role_view, edit: role.role_edit },
+        createTable: role.table_create,
+        tablesPermission: {
+          view: viewQuery.rows.map(row => row.t_id),
+          edit: editQuery.rows.map(row => row.t_id),
+        },
+        members: roleMemberQuery.rows.map(row => row.username)
+      }
+    })),
+    members: userQuery.rows.map(row => row.username),
 
   }
-  res.json(data);
+
+  console.log('fetch request for roles');
+  res.json(queryData);
 };
 
 
 
 const deleteRole = async (req, res) => {
 
-  const { roleId } = req.body;
-  console.log('delete role ', roleId);
-
+  const { roleId, username } = req.body;
+  const userCheck = await Knex.raw('Select * from roles-members where role_id = ? and username = ? ', [roleId, username])
+  await Knex.raw('Delete from roles where role_id = ?', [roleId])
   res.json({ canDelete: true });
 }
 
 const updateRole = async (req, res) => {
   // const roleId = req.params.role_id;
   const { roleId, role } = req.body;
-  console.log('role ', roleId, ' changed to ', role);
 
+  console.log(role);
+  await Knex.raw(
+    `Update roles 
+    set role_name = :role_name, color = :color, table_create = :table_create, role_view= :role_view , role_edit = :role_edit 
+    where role_id = :role_id`,
+    {
+      role_id: roleId,
+      role_name: role.name,
+      color: role.color,
+      table_create: role.createTable,
+      role_view: role.membersPermission.view,
+      role_edit: role.membersPermission.edit
+    }
+  )
+
+  if (role.tablesPermission.view.length != 0) {
+    await Knex.raw('Delete from roles_table_view where role_id = :role_id', { role_id: roleId });
+    await Knex('roles_table_view').insert(role.tablesPermission.view.map(table => ({ role_id: roleId, t_id: table })))
+  }
+
+  if (role.tablesPermission.edit.length != 0) {
+    await Knex.raw('Delete from roles_table_edit where role_id = :role_id', {role_id: roleId}); 
+    await Knex('roles_table_edit').insert(role.tablesPermission.edit.map(table => ({ role_id: roleId, t_id: table })))
+  }
+
+
+  if (role.members != 0) {
+    await Knex.raw('Delete from roles_members where role_id = :role_id', {role_id: roleId}); 
+    await Knex('roles_members').insert(role.members.map(username => ({ role_id: roleId, username: username })))
+  }
+
+  console.log('role ', roleId, ' changed to ', role);
   res.sendStatus(200)
 
 };
 
 const createRole = async (req, res) => {
 
-  console.log('Create role request'); 
+  const { sessionId } = req.body;
+
+  console.log('Create role request');
   const newRole = {
-    id: 5,//generate uuid
-    name: '(role)',
+    id: uuidv4(),
+    name: 'role',
     color: 'green',
 
     membersPermission: { view: false, edit: false },
@@ -96,13 +133,26 @@ const createRole = async (req, res) => {
     tablesPermission: { view: [], edit: [] },
     members: []
   };
-  res.json(newRole); 
+
+  console.log(newRole.id, newRole.name);
+  await Knex.raw(
+    `INSERT INTO roles (role_id, role_name, session_id, color, table_create, role_view, role_edit) 
+      VALUES (:id, :name, :session_id, :color, false, false, false)`,
+    {
+      id: newRole.id,
+      name: newRole.name,
+      session_id: sessionId,
+      color: newRole.color,
+    }
+  );
+
+  res.json(newRole);
 
 };
 
 
 module.exports = {
-  createRole, 
+  createRole,
   updateRole,
   deleteRole,
   index

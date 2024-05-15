@@ -1,3 +1,8 @@
+const knexConfig = require('../knexConfig');
+const knex = require('knex');
+const Knex = knex(knexConfig);
+const {v4: uuidv4} = require('uuid')
+
 const index = async (req, res) => {
   const { sessionId } = req.query;
 
@@ -7,16 +12,22 @@ const index = async (req, res) => {
     { id: 2, name: 'Table 2' },
     { id: 3, name: 'Table 3' },
   ]
-  res.json(tables)
+
+  const tableQuery = await Knex.raw('Select t_id, t_name from tables_ where session_id = ?', [sessionId]);
+
+
+  res.json(tableQuery.rows.map(table => ({
+    id: table.t_id,
+    name: table.t_name,
+  })));
 
 }
 
 
 const getData = async (req, res) => {
-  const sessionId = req.query.sessionId;
-  const userId = req.query.userId;
+  const tableId = req.query.tableId;
 
-  const data =
+  const tempData =
   {
     name: ` `,
     editPermission: true,
@@ -37,7 +48,7 @@ const getData = async (req, res) => {
         tupleId: 0,
         vals: [
           { attrib_id: 0, value: '1' },
-          { attrib_id: 1, value: 'Boii' },
+          { attrib_id: 1, value: 'Xyz' },
           { attrib_id: 2, value: ['123'] },
           { attrib_id: 3, value: ['Hostel 1'] },
           { attrib_id: 4, value: 'Personal Mail' },
@@ -46,26 +57,65 @@ const getData = async (req, res) => {
     ]
   };
 
-  res.json(data);
+
+  const attribsQuery = await Knex.raw("Select * from attributes_ where t_id = ?", [tableId]);
+  const attribs = attribsQuery.rows.map(attrib => ({
+    id: attrib.a_id,
+    name: attrib.a_name,
+    type: attrib.a_type,
+    position: attrib.a_positions
+  }))
+
+  const attribMV = await Promise.all(attribs.map(async (attrib) => {
+    if (!attrib.type.includes('select'))
+      return attrib;
+
+    const optionsQuery = await Knex.raw('Select option from options where a_id = ?', [attrib.id]);
+    return { ...attrib, options: optionsQuery.rows.map(opt => opt.option) };
+  }))
+
+  
+  const tuplesQuery = Knex.raw('Select * from tuples where t_id = ?', [tableId]); 
+  
+
+  console.log(attribMV);
+  const data =
+  {
+    name: 'Table A' ,
+    configuration: {
+      filter: { attrib: '', val: '' },
+      sort: { attrib: '', asc: true },
+      expanded: false,
+    },
+    attribs: attribMV,  
+    data: []
+  };
+
+
+  res.json(tempData);
 };
 
 
 const addTuplePost = async (req, res) => {
-
-
-  const { attribs } = req.body;
+  
+  const { attribs, tableId } = req.body;
   const newTuple = {
-    tupleId: 1, //generating uuid
+    tupleId: uuidv4(), //generating uuid
     vals: [],
   }
 
-  //running insert query
+  await Knex.raw('insert into tuple (tu_id, t_id) values (?, ?)', [newTuple.tupleId, tableId]); 
 
-  attribs.sort((a, b) => a.position - b.position).forEach(attrib => {
-    newTuple.vals = [...newTuple.vals,
-    { attrib_id: attrib.id, value: attrib.type.includes('multi') ? [] : '' }
-    ]
-  })
+  await Promise.all(attribs.sort((a, b) => a.position - b.position).map(async (attrib) => {
+    if (!attrib.type.includes('multi')) {
+        await Knex.raw('INSERT INTO data (tu_id, a_id) VALUES (?, ?)', [newTuple.tupleId, attrib.id]);
+    }
+
+    newTuple.vals.push({
+        attrib_id: attrib.id,
+        value: attrib.type.includes('multi') ? [] : ''
+    });
+}));
 
   console.log('new tuple generated', newTuple);
   res.send(newTuple);
@@ -79,11 +129,11 @@ const configUpdate = async (req, res) => {
 
 const updateData = async (req, res) => {
   const { type, attribId, tupleId, value } = req.body;
-  console.log(type, attribId, tupleId, value);
+  console.log('update data reqest', type, attribId, tupleId, value);
 
-  res.send('ok');
   //different cases for a) single-value b) multi-value c) relations. 
-
+  
+  res.send('ok');
 };
 
 const deleteData = async (req, res) => {
@@ -95,8 +145,9 @@ const deleteData = async (req, res) => {
 
 const deleteTuple = async (req, res) => {
   const { tupleId } = req.body;
-  console.log('Detele tuple request', tupleId);
+  await Knex.raw('Delete from tuple where tu_id = ?', [tupleId]); 
 
+  console.log('deleted tuple'); 
   res.send('ok');
 
 }
@@ -108,9 +159,9 @@ const createTable = async (req, res) => {
 };
 
 const deleteTable = async (req, res) => {
-  const {tableId }= req.body;
+  const { tableId } = req.body;
   console.log(`Delete table route accessed for table ID: ${tableId}`);
-  res.sendStatus(200); 
+  res.sendStatus(200);
 };
 
 const updateTable = async (req, res) => {
@@ -119,7 +170,7 @@ const updateTable = async (req, res) => {
 };
 
 module.exports = {
-  index, 
+  index,
   configUpdate,
   getData,
   updateData,

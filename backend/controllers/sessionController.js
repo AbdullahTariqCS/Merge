@@ -73,7 +73,7 @@ const sidebar = async (req, res) => {
   const tableQuery = await Knex.raw(`Select t_name, t_id from tables_ where session_id= :session_id`, {
     session_id: sessionId,
   });
-
+  
   const queryData = {
     name: nameQuery.rows[0].session_name, 
     Members: {view: permissionQuery.rows[0].role_view, edit: permissionQuery.rows[0].role_edit}, 
@@ -105,7 +105,9 @@ const sessionCreate = async (req, res) => {
   })
 
   const newRole = uuidv4();
-  await Knex.raw('Insert into roles (role_id, session_id, table_create, role_view, role_edit) values (:role_id, :session_id, true, true, true)', {
+  await Knex.raw('Insert into roles (role_name, color, role_id, session_id, table_create, role_view, role_edit) values (:name, :color, :role_id, :session_id, true, true, true)', {
+    color: 'cyan', 
+    name: 'default',   
     role_id: newRole,
     session_id: newSession.id
   })

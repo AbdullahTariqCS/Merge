@@ -50,7 +50,7 @@ function Table(props) {
   }, [configuration]);
 
   const onTupleCreate = async () => {
-    const { data } = await axios.post(`${config.backend}/table/tuple/add`, { attribs: tableData.attribs })
+    const { data } = await axios.post(`${config.backend}/table/tuple/add`, { attribs: tableData.attribs, tableId: props.id })
     // const newTuple = {
     //   tupleId: 0,
     //   vals: [

@@ -38,15 +38,20 @@ function Box({ role, allMembers, edit, deleteRole, updateRole, sessionId, userId
 
 	}, [newMember, memberList])
 
+	const onMemberAdd = (val) => {
+		updateRole(role.id, { ...role, members: [...memberList, val] });
+		setMemberList([...memberList, val]);
+	}
+
 	const onMemberDelete = () => {
-		console.log(selectedItems); 
+		console.log(selectedItems);
 		if (selectedItems.length === 0 || !edit)
 			return
 
 		setMemberList(role.members.filter((_, idx) => !selectedItems.includes(idx)))
 		setSelectedItems([]);
 
-		console.log((_, idx) => !selectedItems.includes(idx))	
+		console.log((_, idx) => !selectedItems.includes(idx))
 		updateRole(role.id, { ...role, members: role.members.filter((_, idx) => !selectedItems.includes(idx)) });
 		setShowContext(false);
 	}
@@ -74,7 +79,7 @@ function Box({ role, allMembers, edit, deleteRole, updateRole, sessionId, userId
 
 	useEffect(() => {
 		const handleClickOutside = (e) => {
-			if (!e.target.closest('.box') && !e.target.closest('.context-menu')|| e.key == 'Escape') {
+			if (!e.target.closest('.box') && !e.target.closest('.context-menu') || e.key == 'Escape') {
 				setSelectedItems([]);
 			}
 		};
@@ -101,7 +106,7 @@ function Box({ role, allMembers, edit, deleteRole, updateRole, sessionId, userId
 			if (!e.target.closest('.role-model') && !e.target.closest('.context-menu') && !e.target.closest('.select') || e.key == 'Escape') {
 				setRoleModel(false);
 				setShowContext(false);
-				setShowContextHead(false); 
+				setShowContextHead(false);
 			}
 		};
 		document.addEventListener('mousedown', handleClickOutsideEditRole);
@@ -114,7 +119,7 @@ function Box({ role, allMembers, edit, deleteRole, updateRole, sessionId, userId
 	return (
 		<>
 
-			<ContextMenu position={contextPos} show={showContext} options={[{ name: 'delete', onClick:onMemberDelete }]} />
+			<ContextMenu position={contextPos} show={showContext} options={[{ name: 'delete', onClick: onMemberDelete }]} />
 			<ContextMenu position={contextPosHead} show={showContextHead} options={[{ name: 'delete role', onClick: () => { deleteRole(role.id); setShowContextHead(false) } }]} />
 			<RoleModel role={role} canEdit={edit} open={roleModel} setOpen={(val) => setRoleModel(val)} updateRole={updateRole} sessionId={sessionId} userId={userId} />
 
@@ -136,7 +141,7 @@ function Box({ role, allMembers, edit, deleteRole, updateRole, sessionId, userId
 
 				{
 					edit &&
-						addMember ? <Select list={allMembers} onSelectValue={setNewMember} clear={false} /> :
+						addMember ? <Select list={allMembers} onSelectValue={onMemberAdd} clear={false} /> :
 						<p className="add-member" onClick={(e) => setAddMember(true)}>+Add</p>
 				}
 			</div>
@@ -148,7 +153,7 @@ function Members() {
 
 
 	const params = new URLSearchParams(window.location.search);
-	const userId = params.get('userId');
+	const username = params.get('username');
 	const sessionId = params.get('sessionId');
 
 	const [roles, setRoles] = useState([]);
@@ -156,7 +161,7 @@ function Members() {
 	const [members, setMembers] = useState([]);
 
 	useEffect(() => {
-		fetch(`${config.backend}/role/index`)
+		fetch(`${config.backend}/role/index?sessionId=${sessionId}&username=${username}`)
 			.then((res) => res.json())
 			.then((data) => {
 				setRoles(data.roles);
@@ -168,23 +173,23 @@ function Members() {
 
 	const deleteRole = async (id) => {
 		console.log(id);
-		const canDelete = await axios.post(`${config.backend}/role/delete`, { roleId: id });
+		const canDelete = await axios.post(`${config.backend}/role/delete`, { roleId: id, username: username});
 		if (canDelete)
 			setRoles(roles.filter(role => role.id != id));
 	}
 
 	const onCreateRole = async () => {
-		const newRole = await axios.post(`${config.backend}/role/create`); 
+		const newRole = await axios.post(`${config.backend}/role/create`, { sessionId: sessionId });
 		console.log(newRole.data);
 		setRoles([...roles, newRole.data]);
-	} 
+	}
 
 	const updateRolePermission = async (id, newRole) => {
 		const idx = roles.findIndex(role => role.id === id);
 		const newRoles = [...roles];
 		newRoles[idx] = newRole;
 
-		await axios.post(`${config.backend}/role/update`, {roleId: id, role: newRole}); 
+		await axios.post(`${config.backend}/role/update`, { roleId: id, role: newRole });
 		console.log(newRole);
 		setRoles(newRoles);
 
@@ -194,12 +199,12 @@ function Members() {
 		<div className="participants">
 			{/* <SelectBox box={selectBox}/> */}
 			<div className="m-heading">Members</div>
-			<div style={{ width: `${(roles.length + 1)* 25}%` }}>
+			<div style={{ width: `${(roles.length + 1) * 25}%` }}>
 				<div className="container-fluid" >
 					<div className="row">
 						{
 							roles.map((role) => (<Box role={role} edit={editPermission} allMembers={members} deleteRole={deleteRole} updateRole={updateRolePermission}
-								sessionId={sessionId} userId={userId} />))
+								sessionId={sessionId} userId={username} />))
 						}
 						<div className="create-box col " onClick={() => onCreateRole()}>+Create</div>
 					</div>
