@@ -2,21 +2,54 @@ import { useState, react, useEffect } from 'react'
 import './table_create.css'
 import '../../assets/theme.css'
 import Select from '../../components/selectOption/selectOption'
+import axios from 'axios'
+import { ContextMenu, onContextClick } from '../../components/context_menu/context_menu'
+import config from '../../../config' 
 
-function Attribs({ attrib, attribs, setAttrib }) {
+function Attribs({ attrib, attribs, setAttrib, deleteAttrib}) {
   const type = [
-    'text', 'number', 'multi-value-number', 'multi-value-text', 'multi-select-text', 'multi-select-number', 'single-select-text', 'single-select-number'
+    'single-value-text', 'single-value-number', 'multi-value-number', 'multi-value-text', 'multi-select-text', 'multi-select-number', 'single-select-text', 'single-select-number'
   ]
 
   const [select, setSelect] = useState(false);
   const [selectPos, setSelectPos] = useState({ x: 0, y: 0 });
   const [value, setValue] = useState(attrib.value);
+  const [options, setOptions] = useState([])
+  const [selectedItems, setSelectedItems] = useState([])
+
+  const [contextPos, setContextPos] = useState({ x: 0, y: 0 });
+  const [showContext, setShowContext] = useState(false);
+
+  const [showOptions, setShowOptions] = useState(true); 
+
 
   const onSelect = (e) => {
     const rect = e.target.getBoundingClientRect();
     setSelectPos({ x: rect.x, y: rect.y + 50 });
     setSelect(true);
   }
+
+  const handleSelectList = (id, ctrlKey, shiftKey) => {
+    let newSelectedItems;
+    if (ctrlKey) {
+      if (selectedItems.includes(id)) {
+        newSelectedItems = selectedItems.filter(itemId => itemId !== id);
+      } else {
+        newSelectedItems = [...selectedItems, id];
+      }
+    }
+    else if (shiftKey) {
+      const min = Math.min(...selectedItems);
+      newSelectedItems = id <= Math.min(...selectedItems) ?
+        Array(min - id + 1).fill().map((_, index) => index + id) :
+        Array(id - min + 1).fill().map((_, index) => index + min)
+    }
+    else {
+      newSelectedItems = [id];
+    }
+
+    setSelectedItems(newSelectedItems);
+  };
 
   const onBlur = (e) => {
     if (!attribs.includes(e.target.value)) {
@@ -30,20 +63,26 @@ function Attribs({ attrib, attribs, setAttrib }) {
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (!e.target.closest('.table-create-select-sm') && !e.target.closest('.select')) {
+      if (!e.target.closest('.table-create-select-sm') && !e.target.closest('.select') && !e.target.closest('.select-options') && !e.target.closest('.context-menu')) {
         setSelect(false);
+        setSelectedItems([])
+        setShowContext(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
+
   }, [])
 
   return (
     <>
       <div className='row' style={{ marginBottom: '0.75rem' }}>
-        <div style={{ width: '2rem' }}></div>
+        <div className='d-flex  justify-content-center' style={{ width: '2rem' }}>
+          <i className='fas fa-trash delete-icon' onClick={() => deleteAttrib()}></i>
+
+        </div>
         <div className='col-sm-4 p-0'>
           <input type="text" autoComplete='off' className="table-create-input table-create-input-sm"
             placeholder='Name' value={value} onBlur={(e) => onBlur(e)} onChange={(e) => setValue(e.target.value)}></input>
@@ -56,6 +95,42 @@ function Attribs({ attrib, attribs, setAttrib }) {
             select && <Select position={selectPos} list={type} onSelectValue={(val) => setAttrib('type', val)} />
           }
         </div>
+        {
+          attrib.type.includes('select') &&
+          <div className='col-sm-3 p-0'>
+            <input type="text" autoComplete='off' className="table-create-input table-create-input-sm" style={{width: '85%'}}
+              placeholder='options' onKeyDown={(e) => {
+                if (e.key == 'Enter' && !options.includes(e.target.value.trim())) {
+                  setAttrib('options', [...options, e.target.value.trim()]);
+                  setOptions([...options, e.target.value.trim()]); 
+                  e.target.value = ''; 
+                }
+                
+              }}></input>
+              <i className={`fas ${showOptions ? 'fa-eye' : 'fa-eye-slash'} select-option-icon `} onClick={() => setShowOptions(!showOptions)}/>
+
+            <ContextMenu position={contextPos} show={showContext} options={[{
+              name: 'delete', onClick: () => {
+                setOptions(options.filter((_, idx) => !selectedItems.includes(idx)));
+                setSelectedItems([]);
+                setAttrib('options', options.filter((_, idx) => !selectedItems.includes(idx)));
+                setShowContext(false);
+              }
+            }]} />
+
+            {
+              options.length != 0 && showOptions && 
+              <div className='select-options col-sm-11' onContextMenu={(e) => onContextClick(e, setShowContext, setContextPos)}>
+                {
+                  options.map((option, idx) => {
+                    return (<div className={`${selectedItems.includes(idx) ? 'm-primary' : 'm-secondary'} select-options-item`} onClick={(e) => handleSelectList(idx, e.ctrlKey, e.shiftKey)}>{option}</div>)
+                  })
+                }
+              </div>
+
+            }
+          </div>
+        }
       </div>
     </>
   )
@@ -190,7 +265,6 @@ function Relations({ relation, setRelation, currentAttribs, currentRelations, in
     newSelect[target].pos = { x: rect.x, y: rect.y + 50 };
     setSelect(newSelect);
   }
-
   const onAttribUpdate = (val) => {
     const attrib = aAttribs.find(attrib => attrib.name.trim() === val.trim());
     setRelation('attrib', val);
@@ -220,7 +294,7 @@ function Relations({ relation, setRelation, currentAttribs, currentRelations, in
 
         <div style={{ width: '2rem' }}></div>
         <div className='col-sm-4 pl-0'>
-          <input type="text" autoComplete='off' className="table-create-input-sm" style={{width: '100%'}} placeholder='Name'
+          <input type="text" autoComplete='off' className="table-create-input-sm" style={{ width: '100%' }} placeholder='Name'
             value={name} onBlur={(e) => updateName(e)} onChange={(e) => setName(e.target.value)}></input>
         </div>
 
@@ -246,7 +320,7 @@ function Relations({ relation, setRelation, currentAttribs, currentRelations, in
         </div>
         <div className='col-sm-2 p-0'>
           <div className={`table-create-select-sm ${relation.currentAttrib === null ? 'disabled' : ''} ${relation.currentAttrib === '' || relation.currentAttrib === null ? 'm-secondary' : 'm-primary'}`}
-            onClick={(e) => relation.currentAttrib!= null && onSelect('currentAttrib', e)}>
+            onClick={(e) => relation.currentAttrib != null && onSelect('currentAttrib', e)}>
             {relation.currentAttrib === '' || relation.currentAttrib === null ? 'ref attrib' : relation.currentAttrib}
           </div>
           {
@@ -283,14 +357,13 @@ function Relations({ relation, setRelation, currentAttribs, currentRelations, in
 }
 function TableCreate({ propsObject }) {
 
-  // const {sessionId} = propsObject;
-  const sessionId = 1;
+  const {sessionId, username} = propsObject;
 
   const [name, setName] = useState('');
   const [attribs, setAttribs] = useState([
-    { value: '', type: '' },
-    { value: '', type: '' },
-    { value: '', type: '' },
+    { value: '', type: '', options: null },
+    { value: '', type: '', options: null },
+    { value: '', type: '', options: null },
   ]);
 
   const [relations, setRelations] = useState([
@@ -306,8 +379,8 @@ function TableCreate({ propsObject }) {
   ])
 
 
-  const onCreate = () => {
-    //api/tables/create?session_id=session_id
+  const onCreate = async () => {
+    await axios.post(`${config.backend}/table/create`, {sessionId: sessionId, name: name,  attribs: attribs, username: username })
 
   }
   const addAttrib = () => {
@@ -330,6 +403,7 @@ function TableCreate({ propsObject }) {
     // console.log(tempRelations);
     setRelations(tempRelations);
   }
+
   return (
     <div className='table-create-wrapper'>
       <div className='container-fluid mt-5 pl-4'>
@@ -355,7 +429,10 @@ function TableCreate({ propsObject }) {
                 newAttribs[idx][target] = val;
                 setAttribs(newAttribs);
               }
-              return (<Attribs attrib={attrib} attribs={attribs.map(attrib => attrib.value.trimStart().trimEnd()).filter(attrib => attrib != '')} setAttrib={setAttrib} />);
+              const deleteAttrib = () => {
+                setAttribs(attribs.filter((_, i) => i != idx))
+              }
+              return (<Attribs attrib={attrib} attribs={attribs.map(attrib => attrib.value.trimStart().trimEnd()).filter(attrib => attrib != '')} setAttrib={setAttrib} deleteAttrib={deleteAttrib} />);
             })
           }
 

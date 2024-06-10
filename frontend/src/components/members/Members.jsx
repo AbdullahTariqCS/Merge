@@ -10,7 +10,7 @@ import config from "../../../config";
 import axios from "axios";
 import { ContextMenu, onContextClick, hideContext } from '../context_menu/context_menu'
 
-function Box({ role, allMembers, edit, deleteRole, updateRole, sessionId, userId }) {
+function Box({ role, allMembers, edit, deleteRole, updateMember, updateRole, sessionId, userId }) {
 
 	const [roleModel, setRoleModel] = useState(false);
 	const [selectedItems, setSelectedItems] = useState([]);
@@ -23,6 +23,10 @@ function Box({ role, allMembers, edit, deleteRole, updateRole, sessionId, userId
 	const [showContextHead, setShowContextHead] = useState(false);
 	const [contextPosHead, setContextPosHead] = useState({ x: 0, y: 0 });
 
+	useEffect(() => {
+		setMemberList(role.members);
+	}, [role]);
+	
 	useEffect(() => {
 		const effect = async () => {
 
@@ -38,21 +42,28 @@ function Box({ role, allMembers, edit, deleteRole, updateRole, sessionId, userId
 
 	}, [newMember, memberList])
 
-	const onMemberAdd = (val) => {
-		updateRole(role.id, { ...role, members: [...memberList, val] });
+	const onMemberAdd = async (val) => {
+		if (memberList.includes(val))
+			return;
+
+		await axios.post(`${config.backend}/role/member/insert`, {sessionId: sessionId, roleId: role.id, username:val })
+		// updateRole(role.id, { ...role, members: [...memberList, val] });
+		updateMember(role.id, val);
 		setMemberList([...memberList, val]);
 	}
 
-	const onMemberDelete = () => {
+	const onMemberDelete = async () => {
 		console.log(selectedItems);
 		if (selectedItems.length === 0 || !edit)
 			return
 
+		await axios.post(`${config.backend}/role/member/delete`, { sessionId: null, roleId: role.id, usernames: role.members.filter((_, idx) => selectedItems.includes(idx)) })
+
 		setMemberList(role.members.filter((_, idx) => !selectedItems.includes(idx)))
 		setSelectedItems([]);
 
-		console.log((_, idx) => !selectedItems.includes(idx))
-		updateRole(role.id, { ...role, members: role.members.filter((_, idx) => !selectedItems.includes(idx)) });
+		// console.log((_, idx) => !selectedItems.includes(idx))
+		// updateRole(role.id, { ...role, members: role.members.filter((_, idx) => !selectedItems.includes(idx)) }, false);
 		setShowContext(false);
 	}
 
@@ -173,7 +184,7 @@ function Members() {
 
 	const deleteRole = async (id) => {
 		console.log(id);
-		const canDelete = await axios.post(`${config.backend}/role/delete`, { roleId: id, username: username});
+		const canDelete = await axios.post(`${config.backend}/role/delete`, { roleId: id, username: username });
 		if (canDelete)
 			setRoles(roles.filter(role => role.id != id));
 	}
@@ -184,13 +195,24 @@ function Members() {
 		setRoles([...roles, newRole.data]);
 	}
 
-	const updateRolePermission = async (id, newRole) => {
+	const updateRolePermission = async (id, newRole, request = true) => {
 		const idx = roles.findIndex(role => role.id === id);
 		const newRoles = [...roles];
 		newRoles[idx] = newRole;
-
-		await axios.post(`${config.backend}/role/update`, { roleId: id, role: newRole });
+		if (request)
+			await axios.post(`${config.backend}/role/update`, { roleId: id, role: newRole });
 		console.log(newRole);
+		setRoles(newRoles);
+
+	}
+
+	const updateMember = async (id, member) => {
+		const idx = roles.findIndex(role => role.id === id);
+		const newRoles = roles.map(role => {
+			if(role.id != id && role.members.includes(member))
+				return {...role, members: role.members.filter(cMember => cMember != member )};
+			return role; 
+		});
 		setRoles(newRoles);
 
 	}
@@ -204,7 +226,7 @@ function Members() {
 					<div className="row">
 						{
 							roles.map((role) => (<Box role={role} edit={editPermission} allMembers={members} deleteRole={deleteRole} updateRole={updateRolePermission}
-								sessionId={sessionId} userId={username} />))
+								updateMember={updateMember} sessionId={sessionId} userId={username} />))
 						}
 						<div className="create-box col " onClick={() => onCreateRole()}>+Create</div>
 					</div>

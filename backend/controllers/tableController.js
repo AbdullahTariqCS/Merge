@@ -1,7 +1,9 @@
+const { error } = require('console');
 const knexConfig = require('../knexConfig');
 const knex = require('knex');
+const { type } = require('os');
 const Knex = knex(knexConfig);
-const {v4: uuidv4} = require('uuid')
+const { v4: uuidv4 } = require('uuid');
 
 const index = async (req, res) => {
   const { sessionId } = req.query;
@@ -74,48 +76,69 @@ const getData = async (req, res) => {
     return { ...attrib, options: optionsQuery.rows.map(opt => opt.option) };
   }))
 
-  
-  const tuplesQuery = Knex.raw('Select * from tuples where t_id = ?', [tableId]); 
-  
+  const tuplesQuery =
+    await Knex.raw('Select tu_id from tuple where t_id = ? group by tu_id', [tableId])
+      .then((result) => result)
+      .catch((error) => console.log(error));
 
-  console.log(attribMV);
+
+  const tuplesData = await Promise.all(tuplesQuery.rows.map(async (tuple) => {
+
+    return {
+      tupleId: tuple.tu_id,
+      vals: await Promise.all(attribMV.map(async (attrib) => {
+
+        const valsQuery = await Knex('data').where('a_id', attrib.id).andWhere('tu_id', tuple.tu_id).select('val')
+          .catch(error => console.log(error));
+
+        var value = attrib.type.includes('multi') ? valsQuery.map(val => val.val) : valsQuery.length == 0 || valsQuery[0].val === null ? '' : valsQuery[0].val;
+
+        return {
+          attrib_id: attrib.id,
+          value: value
+        }
+
+      }))
+    }
+  }))
+
   const data =
   {
-    name: 'Table A' ,
+    name: 'Table A',
     configuration: {
       filter: { attrib: '', val: '' },
       sort: { attrib: '', asc: true },
       expanded: false,
     },
-    attribs: attribMV,  
-    data: []
+    attribs: attribMV,
+    data: tuplesData
   };
 
-
-  res.json(tempData);
+  // console.log(require('util').inspect(data, { depth: null }));
+  res.json(data);
 };
 
 
 const addTuplePost = async (req, res) => {
-  
+
   const { attribs, tableId } = req.body;
   const newTuple = {
     tupleId: uuidv4(), //generating uuid
     vals: [],
   }
 
-  await Knex.raw('insert into tuple (tu_id, t_id) values (?, ?)', [newTuple.tupleId, tableId]); 
+  await Knex.raw('insert into tuple (tu_id, t_id) values (?, ?)', [newTuple.tupleId, tableId]);
 
   await Promise.all(attribs.sort((a, b) => a.position - b.position).map(async (attrib) => {
     if (!attrib.type.includes('multi')) {
-        await Knex.raw('INSERT INTO data (tu_id, a_id) VALUES (?, ?)', [newTuple.tupleId, attrib.id]);
+      await Knex.raw('INSERT INTO data (tu_id, a_id) VALUES (?, ?)', [newTuple.tupleId, attrib.id]);
     }
 
     newTuple.vals.push({
-        attrib_id: attrib.id,
-        value: attrib.type.includes('multi') ? [] : ''
+      attrib_id: attrib.id,
+      value: attrib.type.includes('multi') ? [] : ''
     });
-}));
+  }));
 
   console.log('new tuple generated', newTuple);
   res.send(newTuple);
@@ -132,8 +155,24 @@ const updateData = async (req, res) => {
   console.log('update data reqest', type, attribId, tupleId, value);
 
   //different cases for a) single-value b) multi-value c) relations. 
-  
-  res.send('ok');
+  if (type.includes('single')) {
+    await Knex('data').where('tu_id', tupleId).andWhere('a_id', attribId).update({ val: value }).catch(error => {
+      console.log('upate error : ', error);
+      res.sendStatus(500);
+    })
+    res.sendStatus(202);
+
+  }
+
+  if (type.includes('multi')) {
+    await Knex('data').insert({ a_id: attribId, tu_id: tupleId, val: value }).catch(error => {
+      console.log('upate error : ', error);
+      res.sendStatus(500);
+    })
+    res.sendStatus(202);
+
+  }
+
 };
 
 const deleteData = async (req, res) => {
@@ -145,22 +184,129 @@ const deleteData = async (req, res) => {
 
 const deleteTuple = async (req, res) => {
   const { tupleId } = req.body;
-  await Knex.raw('Delete from tuple where tu_id = ?', [tupleId]); 
+  // await Knex.raw('Delete from tuple where tu_id = ?', [tupleId]); 
 
-  console.log('deleted tuple'); 
-  res.send('ok');
+  const result = await Knex('tuple').where('tu_id', tupleId).del().catch(error => {
+    console.log(`cannot delete tuple: ${error}`)
+    res.sendStatus(404)
+  })
+
+  res.sendStatus(200);
 
 }
 
 
 const createTable = async (req, res) => {
-  console.log("Create table route accessed");
-  res.send("Create table route accessed");
+  const { name, attribs, sessionId, username } = req.body;
+  var errorBool = false;
+
+  if (name == '' || name == null) {
+    res.sendStatus(500);
+    return
+  }
+  console.log(`creating table ${name} with attribs`, attribs);
+
+  const tableId = uuidv4();
+
+  var filteredOptions = []
+
+  const filteredAttribs = attribs.filter(attrib => !['', null].includes(attrib.name) && !['', null].includes(attrib.type))
+    .map((attrib, i) => {
+      const id = uuidv4();
+
+      Array.isArray(attrib.options) && attrib.options.forEach(element => {
+        filteredOptions = [...filteredOptions, { a_id: id, option: element }];
+      });
+
+      return { t_id: tableId, a_id: id, a_name: attrib.value, a_type: attrib.type, a_positions: i };
+
+    })
+
+  await Knex('Tables_'.toLowerCase()).insert({ t_id: tableId, session_id: sessionId, t_name: name })
+    .catch(error => {
+      console.error(error)
+      errorBool = true;
+    });
+
+  if (errorBool) {
+    res.sendStatus(500);
+    return;
+  }
+
+  await Knex('Attributes_'.toLowerCase()).insert(filteredAttribs)
+    .catch(error => {
+      console.error(error)
+      error = true;
+    });
+
+
+  if (errorBool) {
+    await Knex('tables_'.toLowerCase()).where(t_id, tableId).del().catch(error => console.error(error));
+    res.sendStatus(500);
+    return;
+  }
+
+  if (filteredOptions.length)
+    await Knex('options'.toLowerCase()).insert(filteredOptions)
+      .catch(error => {
+        console.error(error)
+        errorBool = true;
+      });
+
+
+  if (errorBool) {
+    await Knex('tables_'.toLowerCase()).where(t_id, tableId).del().catch(error => console.error(error));
+    res.sendStatus(500);
+    return;
+  }
+
+
+  //changing role permissions
+  console.log(sessionId, username);
+  const roleId = await Knex('roles_members').where('username', username).select('role_id')
+    .catch(error => {
+
+      console.error(error);
+      errorBool = true;
+    });
+
+  if (errorBool) {
+    res.sendStatus(500);
+    return;
+  }
+
+  await Knex('roles_table_view').insert({ role_id: roleId[0].role_id, t_id: tableId })
+    .catch(error => {
+      console.error(error);
+      errorBool = true;
+    });
+
+  if (errorBool) {
+    res.sendStatus(500);
+    return;
+  }
+
+  await Knex('roles_table_edit').insert({ role_id: roleId[0].role_id, t_id: tableId })
+    .catch(error => {
+      console.error(error);
+      errorBool = true;
+    })
+
+
+  if (errorBool) {
+    res.sendStatus(500);
+    return;
+  }
+
+  res.sendStatus(202);
+
+
 };
 
 const deleteTable = async (req, res) => {
   const { tableId } = req.body;
   console.log(`Delete table route accessed for table ID: ${tableId}`);
+  await Knex('Tables_'.toLowerCase()).where('t_id', tableId).del().catch(error => {console.log(error); res.sendStatus(404)});
   res.sendStatus(200);
 };
 

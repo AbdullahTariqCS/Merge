@@ -11,6 +11,43 @@
   flex-direction: column;
   justify-content: center;
 }
+.delete-icon{
+  font-size: small; 
+  color: #74747430;
+  cursor: pointer;
+  padding: 0; 
+  margin-top: 1rem;
+}
+.delete-icon:hover{
+  color: #fa6262;
+}
+.select-option-icon{
+  margin-left: 0.5rem;
+  padding: 0;
+  font-size: small;
+  color: #747474;
+  cursor: pointer;
+}
+.select-option-icon:hover{
+  color: #fefefe;
+}
+.select-options{
+  border: 1px solid #fefefe;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  border-top: none;
+  top: -3px;   
+  width: 85%; 
+  padding: 1rem;
+  padding-bottom: 0.75rem; 
+  
+}
+
+.select-options-item:hover{
+  color: #fefefe;
+  cursor: pointer;
+  user-select: none;
+}
 
 .table-create-button{
   z-index: 10;
@@ -40,7 +77,7 @@
   padding-top: 5px;
   padding-left: 1rem;
   padding-right: 1rem;
-  width: 90%;
+  width: 95%;
   color: #fefefe;
   background-color: #191919;
   border: 0.5px solid #5e5e5e;
@@ -54,7 +91,7 @@
   padding-top: 8px;
   padding-left: 1rem;
   padding-right: 1rem;
-  width: 90%;
+  width: 95%;
   height: 45px;
   color: #fefefe;
   background-color: #191919;
@@ -69,7 +106,7 @@
   padding-top: 8px;
   padding-left: 1rem;
   padding-right: 1rem;
-  width: 90%;
+  width: 95%;
   background-color: #191919;
   border: 0.5px solid #5e5e5e;
   cursor: pointer;

@@ -37,7 +37,7 @@ function Table(props) {
       .then((data) => {
         setTableData(data);
       })
-  }, [])
+  }, [props.id])
 
 
   const [configuration, setConfiguration] = useState(tableData.configuration);
@@ -50,6 +50,8 @@ function Table(props) {
   }, [configuration]);
 
   const onTupleCreate = async () => {
+    if(!props.edit || tableData.attribs.length === 0)
+      return;  
     const { data } = await axios.post(`${config.backend}/table/tuple/add`, { attribs: tableData.attribs, tableId: props.id })
     // const newTuple = {
     //   tupleId: 0,
@@ -102,9 +104,11 @@ function Table(props) {
                     permission={props.edit} expanded={configuration.expanded} tableData={tableData} setTableData={setTableData} />
                 })
             }
-            <tr className='create-tuple' onClick={() => onTupleCreate()}><td colSpan={tableData.attribs.length}>
-              + Create
+
+            <tr className={props.edit && tableData.attribs.length != 0  && 'create-tuple'} onClick={() => onTupleCreate()}><td colSpan={tableData.attribs.length}>
+              {props.edit && tableData.attribs.length != 0  && '+ Create'}
             </td></tr>
+
           </tbody>
         </table>
       </div>
@@ -118,7 +122,8 @@ function Tuple({ data, attribs, id, permission, expanded, tableData, setTableDat
   const [showContext, setShowContext] = useState(false);
 
   const cellWidth = 100 / attribs.length;
-  const style = (data.every(current_data => (Array.isArray(current_data.value) && current_data.value.length === 0) || current_data.value.trim().length === 0) ? { height: '50px' } : {})
+  console.log(data)
+  const style = (data.every(current_data => (Array.isArray(current_data.value) && current_data.value.length === 0) || (!Array.isArray(current_data.value) && current_data.value.trim().length === 0)) ? { height: '50px' } : {})
 
   const onDelete = async () => {
     await axios.post(`${config.backend}/table/tuple/delete`, { tupleId: id });
@@ -137,6 +142,19 @@ function Tuple({ data, attribs, id, permission, expanded, tableData, setTableDat
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    const handleContextClick = (e) => {
+      if (e.target.closest('.cell-selected')) {
+        setShowContext(false);
+      }
+    };
+    document.addEventListener('contextmenu', handleContextClick);
+    return () => {
+      document.removeEventListener('contextmenu', handleContextClick);
+    };
+  }, [showContext]);
+
 
   return (
     <>
@@ -249,6 +267,7 @@ function Cell(props) {
       setValue(newValue)
 
     console.log(newValue);
+    console.log(props.tupleId);
     await axios.post(`${config.backend}/table/data/update`,
       {
         type: props.type,
@@ -365,7 +384,7 @@ function Cell(props) {
   // const value = props.type === 'multi-value' || props.type === 'multi-select' ? 
   if (clicked && (props.type.includes('select')))
     return (
-      <td className='cell' onContextMenu={(e) => props.type.includes('multi') && onContextClick(e, setShowContext, setContextPos)}
+      <td className='cell cell-selected' onContextMenu={(e) => props.type.includes('multi') && onContextClick(e, setShowContext, setContextPos)}
         style={{ width: `${props.cellWidth}%` }} ref={cellRef}>
         {<ContextMenu show={showContext} position={contextPos} options={[{ name: 'delete', onClick: onDelete }]} />}
         {props.type.includes('multi') ?
@@ -379,7 +398,7 @@ function Cell(props) {
 
   if (clicked)
     return (
-      <td className='cell' onContextMenu={(e) => props.type.includes('multi') && onContextClick(e, setShowContext, setContextPos)} style={{ width: `${props.cellWidth}%` }} ref={cellRef}>
+      <td className='cell cell-selected' onContextMenu={(e) => props.type.includes('multi') && onContextClick(e, setShowContext, setContextPos)} style={{ width: `${props.cellWidth}%` }} ref={cellRef}>
         {<ContextMenu show={showContext} position={contextPos} options={[{ name: 'delete', onClick: onDelete }]} />}
         <div onSubmit={(e) => {
           e.preventDefault()
@@ -403,7 +422,7 @@ function Cell(props) {
 
   return (
     // <td className='' style={{ width: `${props.cellWidth}%` }} onClick={onClick}>{value}</td>
-    <td className='cell' style={{ height: '25px', overflowX: 'auto', maxWidth: `${props.cellWidth}%`, cursor: 'pointer' }} ref={cellRef} onClick={(e) => onClick(e)}>
+    <td className='cell ' style={{ height: '25px', overflowX: 'auto', maxWidth: `${props.cellWidth}%`, cursor: 'pointer' }} ref={cellRef} onClick={(e) => onClick(e)}>
       {Array.isArray(value) ?
         (
           <div className={props.expanded ? 'ml-1 ' : 'cell-multi-view ml-1'}>

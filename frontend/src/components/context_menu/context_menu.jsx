@@ -1,9 +1,11 @@
 import './context_menu.css'
 import '../../assets/theme.css'
+import { useEffect } from 'react';
 
 
 
 export function hideContext(setVal) {
+  
   const handleClickOutsideEditRole = (e) => {
     if (!e.target.closest('.context-menu')) {
       setVal(false);
@@ -15,7 +17,7 @@ export function hideContext(setVal) {
   };
 };
 
-;
+
 
 export function onContextClick(e, setVal, setPos, x=0, y=0) {
   e.preventDefault();   

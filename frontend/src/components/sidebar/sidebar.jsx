@@ -22,7 +22,7 @@ function Create(props) {
 
   return (
     <li className="nav-item">
-      <p className='nav-link m-create m-secondary' onClick={() => props.select({ content_type: 'TableCreate', props: {} })} role="tab">
+      <p className='nav-link m-create m-secondary' onClick={() => props.select({ content_type: 'TableCreate', props: {sessionId: props.sessionId, username: props.username} })} role="tab">
         + Create Table
       </p>
     </li>
@@ -48,7 +48,7 @@ function SidebarView(props) {
 
   return (
     <>
-      <ContextMenu position={cmPos} show={showCm} options={[{ name: 'delete', onClick: () => { props.deleteTable(props.id); setShowCm(false) } }]} />
+      <ContextMenu position={cmPos} show={props.item.edit && showCm} options={[{ name: 'delete', onClick: () => { props.deleteTable(props.id); setShowCm(false) } }]} />
       <li className="nav-item mb-1">
         <a className={`m-primary nav-link${props.item.id == props.selected ? ' active' : ''}`} data-toggle="pill"
           onClick={() => props.select({ content_type: 'View', props: { id: props.item.id, title: props.item.title, edit:props.item.edit, selectContent: props.select } })} role="tab"
@@ -165,7 +165,7 @@ function Sidebar({ userName, title, selectContent, selected, }) {
               // return <SidebarItem key={listItem.title} item={listItem} selected = {props.selected.props.id === undefined? -1 : props.selected.props.id} select={props.selectContent}/>
             })}
             {
-              data.CreateTable && <Create select={selectContent} />
+              data.CreateTable && <Create select={selectContent} username={username} sessionId={sessionId} />
             }
           </div>
           <div className='user-name m-primary container-fluid pl-4 row d-flex align-items-center'

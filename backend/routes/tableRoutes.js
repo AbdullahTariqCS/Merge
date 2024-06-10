@@ -14,6 +14,7 @@ router.post('/tuple/delete', tableController.deleteTuple);
 
 router.post('/update', tableController.updateTable);
 router.post('/delete', tableController.deleteTable);
+router.post('/create', tableController.createTable);
 
 router.post('/data/delete', tableController.deleteData);
 

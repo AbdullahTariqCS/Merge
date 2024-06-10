@@ -23,7 +23,7 @@ function RoleModel({ open, setOpen, canEdit, role, sessionId, userId, updateRole
       .then((res) => res.json())
       .then((data) => {
         setTables(data);
-        console.log(tables); 
+        console.log(tables);
       })
   }, [])
 
@@ -91,15 +91,21 @@ function RoleModel({ open, setOpen, canEdit, role, sessionId, userId, updateRole
     setSelectedItems(newSelectedItems);
   };
 
-  const onViewSelect = (val) => {
+  const onViewSelect = async (val) => {
     const tableId = tables.find(table => table.name === val).id;
-    if (!role.tablesPermission.view.includes(tableId))
-      updateRole(role.id, { ...role, tablesPermission: { ...role.tablesPermission, view: [...role.tablesPermission.view, tableId] } });
+    if (!role.tablesPermission.view.includes(tableId)) {
+      updateRole(role.id, { ...role, tablesPermission: { ...role.tablesPermission, view: [...role.tablesPermission.view, tableId] } }, false);
+      await axios.post(`${config.backend}/role/table/insert`, { mode: 'view', roleId: role.id, tableId: tableId });
+    }
+
   }
-  const onEditSelect = (val) => {
+
+  const onEditSelect = async (val) => {
     const tableId = tables.find(table => table.name === val).id;
-    if (!role.tablesPermission.edit.includes(tableId))
+    if (!role.tablesPermission.edit.includes(tableId)) {
       updateRole(role.id, { ...role, tablesPermission: { ...role.tablesPermission, edit: [...role.tablesPermission.edit, tableId] } });
+      await axios.post(`${config.backend}/role/table/insert`, { mode: 'edit', roleId: role.id, tableId: tableId });
+    }
   }
 
   useEffect(() => {
@@ -134,19 +140,26 @@ function RoleModel({ open, setOpen, canEdit, role, sessionId, userId, updateRole
     };
   }, [])
 
-  const deleteViewTables = () => {
+  const deleteViewTables = async () => {
     if (!canEdit || viewSelectedItems.length === 0)
       return
+
+    const view = role.tablesPermission.view.filter((_, idx) => !viewSelectedItems.includes(idx))
     updateRole(role.id, {
       ...role, tablesPermission:
       {
         view: role.tablesPermission.view.filter((_, idx) => !viewSelectedItems.includes(idx)),
-        edit: role.tablesPermission.edit.filter((_, idx) => !viewSelectedItems.includes(idx)),
-      }
-    })
+        edit: role.tablesPermission.edit.filter((table) => !role.tablesPermission.view.filter((_, idx) => viewSelectedItems.includes(idx)).includes(table)),
+      },
+
+    }, false)
+
+    await axios.post(`${config.backend}/role/table/delete`, { mode: 'view', roleId: role.id, tables: role.tablesPermission.view.filter((_, idx) => viewSelectedItems.includes(idx)) })
+    setShowViewCm(false); 
   }
 
-  const deleteEditTables = () => {
+
+  const deleteEditTables = async () => {
     if (!canEdit || editSelectedItems.length === 0)
       return
     updateRole(role.id, {
@@ -155,7 +168,9 @@ function RoleModel({ open, setOpen, canEdit, role, sessionId, userId, updateRole
         view: role.tablesPermission.view,
         edit: role.tablesPermission.edit.filter((_, idx) => !editSelectedItems.includes(idx)),
       }
-    })
+    }, false)
+    await axios.post(`${config.backend}/role/table/delete`, { mode: 'edit', roleId: role.id, tables: role.tablesPermission.edit.filter((_, idx) => viewSelectedItems.includes(idx)) })
+    setShowEditCm(false);
   }
 
   if (open)
@@ -171,7 +186,7 @@ function RoleModel({ open, setOpen, canEdit, role, sessionId, userId, updateRole
         }
         <div className='role-model'>
           {
-            canEdit && 
+            canEdit &&
             <div className='container-fluid row d-flex align-items-center mb-3'>
               <div className='m-primary role-heading col-sm-3' >Name</div>
               <input className='m-primary role-model-input col-sm-4' defaultValue={role.name}

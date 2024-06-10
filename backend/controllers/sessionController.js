@@ -41,7 +41,7 @@ const sidebar = async (req, res) => {
     ]
   };
 
-  console.log(username, sessionId);
+  // console.log(username, sessionId);
 
   const permissionQuery = await Knex.raw(
     `Select * from roles r, roles_members rm
@@ -73,23 +73,23 @@ const sidebar = async (req, res) => {
   const tableQuery = await Knex.raw(`Select t_name, t_id from tables_ where session_id= :session_id`, {
     session_id: sessionId,
   });
-  
+
   const queryData = {
-    name: nameQuery.rows[0].session_name, 
-    Members: {view: permissionQuery.rows[0].role_view, edit: permissionQuery.rows[0].role_edit}, 
-    CreateTable: permissionQuery.rows[0].table_create, 
+    name: nameQuery.rows[0].session_name,
+    Members: { view: permissionQuery.rows[0].role_view, edit: permissionQuery.rows[0].role_edit },
+    CreateTable: permissionQuery.rows[0].table_create,
     tables: tableQuery.rows.map(table => {
 
       return {
-        id: table.t_id, 
-        title: table.t_name, 
-        view: viewTablesQuery.rows.map(row => row.t_id).includes(table.t_id), 
-        edit: editTablesQuery.rows.map(row => row.t_id).includes(table.t_id), 
+        id: table.t_id,
+        title: table.t_name,
+        view: viewTablesQuery.rows.map(row => row.t_id).includes(table.t_id),
+        edit: editTablesQuery.rows.map(row => row.t_id).includes(table.t_id),
       }
     })
   }
 
-  console.log(queryData);
+  // console.log(queryData);
 
   res.json(queryData);
 };
@@ -105,9 +105,11 @@ const sessionCreate = async (req, res) => {
   })
 
   const newRole = uuidv4();
-  await Knex.raw('Insert into roles (role_name, color, role_id, session_id, table_create, role_view, role_edit) values (:name, :color, :role_id, :session_id, true, true, true)', {
-    color: 'cyan', 
-    name: 'default',   
+  await Knex.raw(`
+    Insert into roles (role_name, color, role_id, session_id, table_create, role_view, role_edit) 
+    values (:name, :color, :role_id, :session_id, true, true, true)`, {
+    color: 'cyan',
+    name: 'default',
     role_id: newRole,
     session_id: newSession.id
   })

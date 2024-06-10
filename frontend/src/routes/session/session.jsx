@@ -14,7 +14,7 @@ const contentCash = {content_typ: 'Welcome', props: {}};
 const ContentList = {
   View: (key, props) => <View key={key} propsObject={props} />,
   Welcome: (key, props) => <Welcome key={key} propsObject={props}/>,
-  TableCreate: (key, props) => <TableCreate key={key}/>, 
+  TableCreate: (key, props) => <TableCreate key={key} propsObject={props}/>, 
   TableIndex: (key, props) => (<TableIndex key={key}/>), 
   Members: (key, props) => (<Members key={key}/>), 
   Import: (key, props) => (<Import key={key} propsObject={props}/>), 
@@ -42,7 +42,7 @@ function Session() {
     <>
       <div className='session-wrapper container-fluid'>
         <div className='row'>
-          <Sidebar key='list' userName={'hello_friend'} sesssionId={1} title='Session 1' selected={currentContent} selectContent={setCurrentContent} />
+          <Sidebar key='list' selected={currentContent} selectContent={setCurrentContent} />
           <div className='content-wrapper col-sm-10 m-0 p-0'>
             {Content('content', currentContent.props)}
           </div>
