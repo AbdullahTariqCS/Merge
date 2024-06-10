@@ -34,7 +34,7 @@ function Login({ setLogin }) {
     const message = await axios.post(`${config.backend}/user/authenticate`, { info });
     if (!message.data.error.userName && !message.data.error.password) {
       // setLoggedin(true);
-      navigate( '/home', {state: {username: info.userName}})
+      navigate( '/home', {state: {username: info.userName, userToken: message.data.token}})
       return;
     }
     setError(message.data.error);
@@ -76,20 +76,20 @@ function SignUp({ setLogin }) {
   const [info, setInfo] = useState({userName: '', password: '', confirmPassword: ''}); 
   const [signUp, setSignUp] = useState(false); 
 
+  const navigate = useNavigate(); 
 
   const onSignUp = async () => {
     
-    const currentError = await axios.post(`${config.backend}/user/register`, { info });
-    console.log(currentError); 
-    if (!currentError.data.userName && !currentError.data.password) {
-      setSignUp(true);
+    const message = await axios.post(`${config.backend}/user/register`, { info });
+    if (!message.data.error.userName && !message.data.error.password) {
+      navigate( '/home', {state: {username: info.userName, userToken: message.data.token}})
       return;
     }
-    setError(currentError.data);
+    setError(message.data);
   }
 
-  if(signUp)
-    return <Navigate to={`/home?username=${info.userName}`}/>
+  // if(signUp)
+  //   return <Navigate to={`/home?username=${info.userName}`}/>
   return (
     <>
       <p className='m-primary login-label d-flex align-items-center mb-4'>Sign Up</p>

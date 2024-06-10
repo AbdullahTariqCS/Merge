@@ -1,10 +1,14 @@
 const knexConfig = require("../knexConfig");
 const { v4: uuidv4 } = require('uuid');
 const knex = require('knex');
+const { authorize } = require("../authorize");
 const Knex = knex(knexConfig);
 
 const index = async (req, res) => {
   const username = req.query.username;
+  const userToken = req.query.userToken;
+
+
   const knexQuery = `Select * from sessions 
   where sessions.session_id in (
       Select r.session_id from roles r, users u, roles_members rm 
@@ -27,16 +31,22 @@ const index = async (req, res) => {
 };
 
 const getName = async (req, res) => {
-  const {sessionId} = req.query;  
-  const sessionName = await Knex('sessions').select('session_name').where('session_id', sessionId); 
+  const { sessionId } = req.query;
+  const sessionName = await Knex('sessions').select('session_name').where('session_id', sessionId);
 
-  res.json({name: sessionName[0].session_name})
+  res.json({ name: sessionName[0].session_name })
 
 }
 
 const sidebar = async (req, res) => {
   const sessionId = req.query.sessionId;
   const username = req.query.username;
+  const userToken = req.query.userToken;
+
+  if (!authorize(userToken, username)) {
+    res.sendStatus(404);
+    return;
+  }
 
   const data = {
     name: '',
@@ -181,7 +191,7 @@ const detailUpdate = async (req, res) => {
 module.exports = {
   index,
   sidebar,
-  getName, 
+  getName,
   sessionCreate,
   sessionDelete,
   detail,

@@ -1,6 +1,7 @@
 const knex = require('knex');
 const knexConfig = require('../knexConfig');
 const Knex = knex(knexConfig);
+const {config} = require('../config'); 
 const jwt = require('jsonwebtoken'); 
 
 const authenticate = async (req, res) => {
@@ -11,7 +12,6 @@ const authenticate = async (req, res) => {
   const users = await Knex.raw('Select * from users where username = ? ', [info.userName]);
 
 
-  console.log(users.rows);
 
   if (users.rows.length === 0) {
     message.error.userName = true;
@@ -25,9 +25,8 @@ const authenticate = async (req, res) => {
     return;
   }
   
-  const secret = 'hello_world'; 
 
-  message.token = jwt.sign({username: info.userName}, secret, {algorithm: 'HS256'}); 
+  message.token = jwt.sign({username: info.userName}, config.key, {algorithm: 'HS256'}); 
 
   res.json(message);
 };
@@ -35,20 +34,20 @@ const authenticate = async (req, res) => {
 const register = async (req, res) => {
 
   const { info } = req.body;
-  const error = {userName : false, password: false};  
+  const message = {token: null, error: {userName : false, password: false}};  
   console.log('signup for ', info);
 
   if (info.password.trim() != info.confirmPassword )
   {
-    error.password = true; 
-    res.json(error);        
+    message.error.password = true; 
+    res.json(message);        
     return;
   }
 
   const query = await Knex.raw('Select * from users where username = :username', {username: info.userName}); 
   if(query.rows.length != 0){
-    error.userName = true; 
-    res.json(error); 
+    message.error.userName = true; 
+    res.json(message); 
     return; 
   }
   
@@ -56,7 +55,9 @@ const register = async (req, res) => {
     username: info.userName, 
     pass: info.password,   
   }) 
-  res.json(error);
+  
+  message.token = jwt.sign({username: info.userName}, config.key, {algorithm: 'HS256'}); 
+  res.json(message);
 }
 
 module.exports = {

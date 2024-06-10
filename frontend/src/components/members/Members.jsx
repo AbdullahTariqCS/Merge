@@ -164,13 +164,13 @@ function Box({ role, allMembers, edit, deleteRole, updateMember, updateRole, ses
 function Members() {
 
 
-	const {username, sessionId} = useLocation().state; 
+	const {username, userToken, sessionId} = useLocation().state; 
 	const [roles, setRoles] = useState([]);
 	const [editPermission, setEditPermission] = useState(false);
 	const [members, setMembers] = useState([]);
 
 	useEffect(() => {
-		fetch(`${config.backend}/role/index?sessionId=${sessionId}&username=${username}`)
+		fetch(`${config.backend}/role/index?sessionId=${sessionId}&username=${username}&userToken=${userToken}`)
 			.then((res) => res.json())
 			.then((data) => {
 				setRoles(data.roles);
@@ -182,13 +182,13 @@ function Members() {
 
 	const deleteRole = async (id) => {
 		console.log(id);
-		const canDelete = await axios.post(`${config.backend}/role/delete`, { roleId: id, username: username });
+		const canDelete = await axios.post(`${config.backend}/role/delete`, { roleId: id, username: username, userToken: userToken});
 		if (canDelete)
 			setRoles(roles.filter(role => role.id != id));
 	}
 
 	const onCreateRole = async () => {
-		const newRole = await axios.post(`${config.backend}/role/create`, { sessionId: sessionId });
+		const newRole = await axios.post(`${config.backend}/role/create`, { sessionId: sessionId});
 		console.log(newRole.data);
 		setRoles([...roles, newRole.data]);
 	}

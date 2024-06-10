@@ -3,11 +3,17 @@ const knex = require('knex');
 const Knex = knex(knexConfig);
 const { v4: uuidv4 } = require('uuid');
 const { createTable } = require('./tableController');
+const { authorize } = require('../authorize');
+
 const index = async (req, res) => {
   const username = req.query.username;
   const sessionId = req.query.sessionId;
+  const userToken = req.query.userToken;
 
-  console.log(username, sessionId);
+  if (!authorize(userToken, username)) {
+    res.sendStatus(404);
+    return;
+  }
 
   const data = {
     editPermission: true,
@@ -77,7 +83,12 @@ const index = async (req, res) => {
 
 const deleteRole = async (req, res) => {
 
-  const { roleId, username } = req.body;
+  const { roleId, username, userToken } = req.body;
+
+  if (!authorize(userToken, username)) {
+    res.sendStatus(404);
+    return;
+  }
   // const userCheck = await Knex.raw('Select username from roles_members where role_id = ? and username = ? ', [roleId, username])
   const userCheck = await Knex('roles_members').where('username', username).andWhere('role_id', roleId).select('username');
 
@@ -215,9 +226,9 @@ const deleteRoleTable = async (req, res) => {
 }
 
 const insertRoleTable = async (req, res) => {
-  const {mode, roleId, tableId} = req.body;
+  const { mode, roleId, tableId } = req.body;
 
-  console.log(mode, roleId, tableId);  
+  console.log(mode, roleId, tableId);
   if (mode === 'view') {
     await Knex('roles_table_view').insert({ role_id: roleId, t_id: tableId });
     res.sendStatus(200);

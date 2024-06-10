@@ -29,10 +29,9 @@ function Session() {
   // const params = new URLSearchParams(search); 
   // const sessionId = params.get('sessionId'); 
 
-  const {sessionId, username, content} = useLocation().state; 
+  const {sessionId, username, userToken,  content} = useLocation().state; 
 
-  console.log(sessionId, username, content); 
-
+  
   const [currentContent, setCurrentContent] = useState(content ? content : { content_type: 'Welcome', props: {id: sessionId} });
   const Content = ContentList[currentContent.content_type]
 
@@ -41,7 +40,7 @@ function Session() {
     <>
       <div className='session-wrapper container-fluid'>
         <div className='row'>
-          <Sidebar key='list' sessionId={sessionId} username={username} selected={currentContent} selectContent={setCurrentContent} />
+          <Sidebar key='list' sessionId={sessionId} username={username} userToken={userToken} selected={currentContent} selectContent={setCurrentContent} />
           <div className='content-wrapper col-sm-10 m-0 p-0'>
             {Content('content', currentContent.props)}
           </div>

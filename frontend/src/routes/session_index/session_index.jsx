@@ -14,12 +14,13 @@ function SessionIndex() {
 
   // const location = useLocation(); 
   
-  const username = useLocation().state.username; 
-
-
+  
+  const {username, userToken} = useLocation().state; 
   const [sessions, setSessions] = useState([{ create: true }]);
+
+
   useEffect(() => {
-    fetch(`${config.backend}/session/index?username=${username}`)
+    fetch(`${config.backend}/session/index?username=${username}&userToken=${userToken}`)
       .then((res) => res.json())
       .then((data) => {
         console.log(data);
@@ -51,10 +52,10 @@ function SessionIndex() {
 
           return (
             <div className='container-fluid row pl-5 pr-5'>
-              <Session session={sessions[4 * idx]} username={username} onCreate={onCreate} onDelete={onDelete} />
-              {sessions.length > 4 * idx + 1 ? <Session session={sessions[4 * idx + 1]} username={username} onCreate={onCreate} onDelete={onDelete} /> : <div className='col-sm-3' ></div>}
-              {sessions.length > 4 * idx + 2 ? <Session session={sessions[4 * idx + 2]} username={username} onCreate={onCreate} onDelete={onDelete} /> : <div className='col-sm-3' ></div>}
-              {sessions.length > 4 * idx + 3 ? <Session session={sessions[4 * idx + 3]} username={username} onCreate={onCreate} onDelete={onDelete} /> : <div className='col-sm-3' ></div>}
+              <Session session={sessions[4 * idx]} username={username} userToken={userToken} onCreate={onCreate} onDelete={onDelete} />
+              {sessions.length > 4 * idx + 1 ? <Session session={sessions[4 * idx + 1]} userToken={userToken} username={username} onCreate={onCreate} onDelete={onDelete} /> : <div className='col-sm-3' ></div>}
+              {sessions.length > 4 * idx + 2 ? <Session session={sessions[4 * idx + 2]} userToken={userToken} username={username} onCreate={onCreate} onDelete={onDelete} /> : <div className='col-sm-3' ></div>}
+              {sessions.length > 4 * idx + 3 ? <Session session={sessions[4 * idx + 3]} userToken={userToken} username={username} onCreate={onCreate} onDelete={onDelete} /> : <div className='col-sm-3' ></div>}
             </div>
           )
         })
@@ -64,7 +65,7 @@ function SessionIndex() {
   )
 }
 
-function Session({ session, username,  onCreate, onDelete }) {
+function Session({ session, username,  userToken, onCreate, onDelete }) {
   const [sessionSelected, setSessionSelected] = useState(false);
 
   const [showCm, setShowCm] = useState(false);
@@ -90,7 +91,7 @@ function Session({ session, username,  onCreate, onDelete }) {
 
   if (sessionSelected)
     // return <Navigate to={`/session?sessionId=${session.id}&username=${username}`} />
-    navigate('/session', {state: {sessionId:session.id, username:username}}); 
+    navigate('/session', {state: {sessionId:session.id, username:username, userToken: userToken}}); 
 
   return (
     <>

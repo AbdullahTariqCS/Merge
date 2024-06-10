@@ -6,7 +6,7 @@ import { ContextMenu, onContextClick } from '../context_menu/context_menu';
 import axios from 'axios';
 import config from '../../../config';
 import '../../components/login/login.css'
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 function SidebarItem({ title, condition, select, newContent }) {
   return (
@@ -67,7 +67,7 @@ function SidebarView(props) {
 }
 
 
-function Sidebar({ username, sessionId,  title, selectContent, selected, }) {
+function Sidebar({ username, userToken, sessionId,  title, selectContent, selected, }) {
   const [login, setLogin] = useState(false);
   const [showCm, setShowCm] = useState(false);
   const [cmPos, setCmPos] = useState({ x: 0, y: 0 });
@@ -81,10 +81,11 @@ function Sidebar({ username, sessionId,  title, selectContent, selected, }) {
 
 
   const cmOptions = [
-    { name: 'Home', onClick: () => navigate('/home', {state: {username:username}})},
+    { name: 'Home', onClick: () => navigate('/home', {state: {username:username, userToken:userToken}})},
     { name: 'Switch Account', onClick: () => { setLogin(true); setShowCm(false) } },
-    { name: 'Logout', onClick: () => { setNavigate('/login') } },
+    { name: 'Logout', onClick: () => { setNavigate('/login', {username:username, userToken: userToken}) } },
   ]
+
   const [data, setData] = useState({
     Members: { view: false, edit: false },
     CreateTable: false,
@@ -96,11 +97,12 @@ function Sidebar({ username, sessionId,  title, selectContent, selected, }) {
   const deleteTable = async (id) => {
     await axios.post(`${config.backend}/table/delete`, { tableId: id });
     setData({ ...data, tables: data.tables.filter(table => table.id != id) });
+    selectContent({content_type:'Welcome', props:{id: sessionId}}); 
   }
 
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/session/sidebar?sessionId=${sessionId}&username=${username}`)
+    fetch(`http://localhost:5000/api/session/sidebar?sessionId=${sessionId}&username=${username}&userToken=${userToken}`)
       .then((res) => res.json())
       .then((data) => {
         setData(data)
