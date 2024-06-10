@@ -1,9 +1,9 @@
 const { error } = require('console');
 const knexConfig = require('../knexConfig');
 const knex = require('knex');
-const { type } = require('os');
 const Knex = knex(knexConfig);
 const { v4: uuidv4 } = require('uuid');
+const jwt = require('jsonwebtoken')
 
 const index = async (req, res) => {
   const { sessionId } = req.query;
@@ -25,6 +25,32 @@ const index = async (req, res) => {
 
 }
 
+const getAttribs = async (req, res) => {
+  const { tableId } = req.query;
+  const attribQuery = await Knex('attributes_').where('t_id', tableId).select();
+
+  const options = {};
+
+  await Promise.all(attribQuery.map(async attrib => {
+    if (!attrib.a_type.includes('multi'))
+      return null;
+    const result = await Knex('options').select('option').where('a_id', attrib.a_id);
+    options[attrib.a_id] = result.map(res => res.option);
+    return null;
+  }))
+
+  const attribs = attribQuery.sort((a, b) => a.a_positions - b.b_positions).map(attrib => {
+    return {
+      id: attrib.a_id,
+      value: attrib.a_name,
+      type: attrib.a_type,
+      options: attrib.a_type.includes('select') ? options[attrib.a_id] : null
+    }
+  })
+
+  console.log(attribs);
+  res.json(attribs);
+}
 
 const getData = async (req, res) => {
   const tableId = req.query.tableId;
@@ -37,6 +63,7 @@ const getData = async (req, res) => {
       filter: { attrib: '', val: '' },
       sort: { attrib: '', asc: true },
       expanded: false,
+      enlarge: true 
     },
     attribs: [
       { id: 0, name: 'Id', type: 'number', position: 0 },
@@ -177,8 +204,10 @@ const updateData = async (req, res) => {
 
 const deleteData = async (req, res) => {
   const { attribId, tupleId, type, value } = req.body;
-  console.log(attribId, tupleId, type, value);
-  res.send('ok');
+  console.log('delete data for' , attribId, tupleId, type, value);
+
+  await Knex('data').whereIn('val', value).andWhere('tu_id', tupleId).andWhere('a_id', attribId).del(); 
+  res.sendStatus(200);
 }
 
 
@@ -298,27 +327,89 @@ const createTable = async (req, res) => {
     return;
   }
 
+  // res.sendStatus(202);
+  res.json({tableId: tableId}); 
+
+};
+
+const updateTable = async (req, res) => {
+  const { tableId, name, attribs, sessionId, username } = req.body;
+  var errorBool = false;
+
+  if (name == '' || name == null) {
+    res.sendStatus(500);
+    return
+  }
+  console.log(`updating table ${name} with attribs`, attribs);
+
+
+  var filteredOptions = []
+
+  const createdAttribs = attribs.filter(attrib => !['', null].includes(attrib.name) && !['', null].includes(attrib.type) && ['', null, undefined].includes(attrib.id))
+    .map((attrib, i) => {
+      const id = uuidv4();
+
+      Array.isArray(attrib.options) && attrib.options.forEach(element => {
+        filteredOptions = [...filteredOptions, { a_id: id, option: element }];
+      });
+
+      return { t_id: tableId, a_id: id, a_name: attrib.value, a_type: attrib.type, a_positions: i };
+
+    })
+
+  createdAttribs.length && 
+  await Knex('Attributes_'.toLowerCase()).insert(createdAttribs)
+    .catch(error => {
+      console.error(error)
+      errorBool = true;
+    });
+
+
+  if (filteredOptions.length)
+    await Knex('options'.toLowerCase()).insert(filteredOptions)
+      .catch(error => {
+        console.error(error)
+        errorBool = true;
+      });
+
+  var addOptions = [], deleteOptions = [];
+
+
+   await Promise.all(attribs.filter(attrib => !['', null].includes(attrib.name) && !['', null].includes(attrib.type) && !['', null, undefined].includes(attrib.id))
+    .map(async (attrib, i) => {
+
+      if (!attrib.type.includes('select')) {
+        await Knex('options').where('a_id', attrib.id).del();
+        await Knex('attributes_').where('a_id', attrib.id).update({ a_name: attrib.value, a_type: attrib.type, a_positions: i });
+        return;
+      }
+
+      await Knex('options').where('a_id', attrib.id).del();
+      attrib.options && attrib.options.forEach(option => {
+        addOptions = [...addOptions, {a_id: attrib.id, option: option}]
+      })
+
+    }))
+
+  
+  await Knex('options').insert(addOptions); 
+
   res.sendStatus(202);
-
-
 };
 
 const deleteTable = async (req, res) => {
   const { tableId } = req.body;
   console.log(`Delete table route accessed for table ID: ${tableId}`);
-  await Knex('Tables_'.toLowerCase()).where('t_id', tableId).del().catch(error => {console.log(error); res.sendStatus(404)});
+  await Knex('Tables_'.toLowerCase()).where('t_id', tableId).del().catch(error => { console.log(error); res.sendStatus(404) });
   res.sendStatus(200);
 };
 
-const updateTable = async (req, res) => {
-  console.log("Update table route accessed");
-  res.send("Update table route accessed");
-};
 
 module.exports = {
   index,
   configUpdate,
   getData,
+  getAttribs,
   updateData,
   updateTable,
   createTable,

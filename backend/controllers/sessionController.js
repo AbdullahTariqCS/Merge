@@ -26,6 +26,14 @@ const index = async (req, res) => {
 
 };
 
+const getName = async (req, res) => {
+  const {sessionId} = req.query;  
+  const sessionName = await Knex('sessions').select('session_name').where('session_id', sessionId); 
+
+  res.json({name: sessionName[0].session_name})
+
+}
+
 const sidebar = async (req, res) => {
   const sessionId = req.query.sessionId;
   const username = req.query.username;
@@ -173,6 +181,7 @@ const detailUpdate = async (req, res) => {
 module.exports = {
   index,
   sidebar,
+  getName, 
   sessionCreate,
   sessionDelete,
   detail,

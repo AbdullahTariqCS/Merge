@@ -1,7 +1,7 @@
 import '../../assets/theme.css'
 import './session_index.css'
 import { useEffect, useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import config from '../../../config'
 import { ContextMenu, onContextClick } from '../../components/context_menu/context_menu'
 import axios from 'axios'
@@ -9,10 +9,14 @@ import axios from 'axios'
 function SessionIndex() {
   //api/session/index
 
-  const params = new URLSearchParams(window.location.search);
-  const username = params.get('username');
+  // const params = new URLSearchParams(window.location.search);
+  // const username = params.get('username');
 
-  console.log(username);
+  // const location = useLocation(); 
+  
+  const username = useLocation().state.username; 
+
+
   const [sessions, setSessions] = useState([{ create: true }]);
   useEffect(() => {
     fetch(`${config.backend}/session/index?username=${username}`)
@@ -47,10 +51,10 @@ function SessionIndex() {
 
           return (
             <div className='container-fluid row pl-5 pr-5'>
-              <Session session={sessions[4 * idx]} onCreate={onCreate} onDelete={onDelete} />
-              {sessions.length > 4 * idx + 1 ? <Session session={sessions[4 * idx + 1]} onCreate={onCreate} onDelete={onDelete} /> : <div className='col-sm-3' ></div>}
-              {sessions.length > 4 * idx + 2 ? <Session session={sessions[4 * idx + 2]} onCreate={onCreate} onDelete={onDelete} /> : <div className='col-sm-3' ></div>}
-              {sessions.length > 4 * idx + 3 ? <Session session={sessions[4 * idx + 3]} onCreate={onCreate} onDelete={onDelete} /> : <div className='col-sm-3' ></div>}
+              <Session session={sessions[4 * idx]} username={username} onCreate={onCreate} onDelete={onDelete} />
+              {sessions.length > 4 * idx + 1 ? <Session session={sessions[4 * idx + 1]} username={username} onCreate={onCreate} onDelete={onDelete} /> : <div className='col-sm-3' ></div>}
+              {sessions.length > 4 * idx + 2 ? <Session session={sessions[4 * idx + 2]} username={username} onCreate={onCreate} onDelete={onDelete} /> : <div className='col-sm-3' ></div>}
+              {sessions.length > 4 * idx + 3 ? <Session session={sessions[4 * idx + 3]} username={username} onCreate={onCreate} onDelete={onDelete} /> : <div className='col-sm-3' ></div>}
             </div>
           )
         })
@@ -60,15 +64,14 @@ function SessionIndex() {
   )
 }
 
-function Session({ session, onCreate, onDelete }) {
+function Session({ session, username,  onCreate, onDelete }) {
   const [sessionSelected, setSessionSelected] = useState(false);
 
   const [showCm, setShowCm] = useState(false);
   const [cmPos, setCmPos] = useState({ x: 0, y: 0 });
 
+  const navigate = useNavigate(); 
 
-  const params = new URLSearchParams(window.location.search);
-  const username = params.get('username');
 
   useEffect(() => {
     const handleClickOutsideEditRole = (e) => {
@@ -86,7 +89,8 @@ function Session({ session, onCreate, onDelete }) {
     return <SessionCreate onCreate={onCreate}></SessionCreate>
 
   if (sessionSelected)
-    return <Navigate to={`/session?sessionId=${session.id}&username=${username}`} />
+    // return <Navigate to={`/session?sessionId=${session.id}&username=${username}`} />
+    navigate('/session', {state: {sessionId:session.id, username:username}}); 
 
   return (
     <>

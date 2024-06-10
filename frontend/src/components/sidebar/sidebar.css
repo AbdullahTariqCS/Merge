@@ -25,7 +25,7 @@
     color: #fefefe; 
     font-weight: 500;
     position: absolute;
-    top: 600px; 
+    bottom: 2vh;
 }
 .user-name:hover{
     color: #fefefe;

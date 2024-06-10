@@ -41,6 +41,9 @@ function Header({ configuration, setConfiguration, selectContent, data }) {
         <div className={`header-button ${configuration.expanded ? 'selected' : ''}`}
           onClick={() => setConfiguration({ ...configuration, expanded: !configuration.expanded })}>Expand</div>
 
+        <div className={`header-button ${!configuration.enlarge ? 'selected' : ''}`}
+          onClick={() => setConfiguration({ ...configuration, enlarge: !configuration.enlarge })}>Small</div>
+
         <div className='header-button ' onClick={(e) => onImport(e)}>Import </div>
         <div className='header-button '>Export</div>
       </div>

@@ -49,7 +49,19 @@
 .cell-text-filter {
     overflow-x: auto;
 }
+.cell-text{
+    margin-top: 0.15rem;
+    margin-bottom: 0.15rem;
+    padding:0; 
+}
 
+.cell-multi-view ul {
+    overflow-y: auto;
+    max-height: 20px;
+    margin-top: 0.15rem;
+    margin-bottom: 0.15rem;
+    padding: 0; 
+}
 .filter-input-select {
     height: 40px;
     padding-bottom: 5px;
@@ -144,10 +156,6 @@
     height: 100%;
 }
 
-.cell-multi-view ul {
-    overflow-y: auto;
-    max-height: 28px;
-}
 
 /* .cell-multi-view ul {
     list-style-type: circle !important;

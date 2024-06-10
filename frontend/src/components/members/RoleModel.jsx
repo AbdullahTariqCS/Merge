@@ -33,6 +33,7 @@ function RoleModel({ open, setOpen, canEdit, role, sessionId, userId, updateRole
   const onUpdate = () => {
     //api/role/update/:role_id
     setOpen(false);
+    
   }
 
   const colors = ['green', 'cyan', 'red', 'orange'];
@@ -103,7 +104,7 @@ function RoleModel({ open, setOpen, canEdit, role, sessionId, userId, updateRole
   const onEditSelect = async (val) => {
     const tableId = tables.find(table => table.name === val).id;
     if (!role.tablesPermission.edit.includes(tableId)) {
-      updateRole(role.id, { ...role, tablesPermission: { ...role.tablesPermission, edit: [...role.tablesPermission.edit, tableId] } });
+      updateRole(role.id, { ...role, tablesPermission: { ...role.tablesPermission, edit: [...role.tablesPermission.edit, tableId] } }, false);
       await axios.post(`${config.backend}/role/table/insert`, { mode: 'edit', roleId: role.id, tableId: tableId });
     }
   }
@@ -154,6 +155,8 @@ function RoleModel({ open, setOpen, canEdit, role, sessionId, userId, updateRole
 
     }, false)
 
+    
+    
     await axios.post(`${config.backend}/role/table/delete`, { mode: 'view', roleId: role.id, tables: role.tablesPermission.view.filter((_, idx) => viewSelectedItems.includes(idx)) })
     setShowViewCm(false); 
   }

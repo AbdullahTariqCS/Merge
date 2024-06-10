@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import '../../assets/theme.css'
 import './login.css'
 import config from '../../../config';
@@ -26,21 +26,25 @@ function Login({ setLogin }) {
   const [loggedIn, setLoggedin] = useState(false);
   const [info, setInfo] = useState({ userName: '', password: '' })
 
+  const navigate = useNavigate(); 
+
   const onLogin = async () => {
     
 
-    const currentError = await axios.post(`${config.backend}/user/authenticate`, { info });
-    console.log(currentError); 
-    if (!currentError.data.userName && !currentError.data.password) {
-      setLoggedin(true);
+    const message = await axios.post(`${config.backend}/user/authenticate`, { info });
+    if (!message.data.error.userName && !message.data.error.password) {
+      // setLoggedin(true);
+      navigate( '/home', {state: {username: info.userName}})
       return;
     }
-    setError(currentError.data);
+    setError(message.data.error);
   }
 
 
-  if (loggedIn)
-    return (<Navigate to={`/home?username=${info.userName}`} />)
+  // if (loggedIn)
+  //   // return (<Navigate to={`/home?username=${info.userName}`} />)
+  //   return (navigate( '/home', {state: {username: info.userName}}));
+
   return (
     <>
       <p className='m-primary login-label d-flex align-items-center'>Login</p>

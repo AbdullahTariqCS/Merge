@@ -51,7 +51,9 @@
 
 .table-create-button{
   z-index: 10;
-  width : 55px
+  width : 60px;
+  display: flex; 
+  justify-content: center;
 }
 .table-create-label {
   font-size: large;

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useState } from 'react'
 import { useLocation, useParams } from 'react-router-dom'
 import Sidebar from '../../components/sidebar/sidebar'
@@ -9,6 +9,7 @@ import Members from '../../components/members/Members'
 import TableIndex from '../../components/tableIndex/tableIndex'
 import Import from '../../components/import/import'
 import './session.css'
+import config from '../../../config'
 
 const contentCash = {content_typ: 'Welcome', props: {}};
 const ContentList = {
@@ -24,25 +25,23 @@ const ContentList = {
 
 function Session() {
 
-  const {search} = useLocation(); 
-  const params = new URLSearchParams(search); 
-  const sessionId = params.get('sessionId'); 
-  // console.log(sessionId); 
+  // const {search} = useLocation(); 
+  // const params = new URLSearchParams(search); 
+  // const sessionId = params.get('sessionId'); 
 
-  const [currentContent, setCurrentContent] = useState({ content_type: 'Welcome', props: {title: null} });
+  const {sessionId, username, content} = useLocation().state; 
+
+  console.log(sessionId, username, content); 
+
+  const [currentContent, setCurrentContent] = useState(content ? content : { content_type: 'Welcome', props: {id: sessionId} });
   const Content = ContentList[currentContent.content_type]
 
 
-  // const setContent = (newContent) =>
-  //   contentCash = newContent; 
-  //   setCurrentContent(newContent);
-  // }
-  // const setContent
   return (
     <>
       <div className='session-wrapper container-fluid'>
         <div className='row'>
-          <Sidebar key='list' selected={currentContent} selectContent={setCurrentContent} />
+          <Sidebar key='list' sessionId={sessionId} username={username} selected={currentContent} selectContent={setCurrentContent} />
           <div className='content-wrapper col-sm-10 m-0 p-0'>
             {Content('content', currentContent.props)}
           </div>

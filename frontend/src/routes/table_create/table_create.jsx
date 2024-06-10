@@ -1,12 +1,178 @@
 import { useState, react, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './table_create.css'
 import '../../assets/theme.css'
 import Select from '../../components/selectOption/selectOption'
 import axios from 'axios'
 import { ContextMenu, onContextClick } from '../../components/context_menu/context_menu'
-import config from '../../../config' 
+import config from '../../../config'
 
-function Attribs({ attrib, attribs, setAttrib, deleteAttrib}) {
+function TableCreate({ propsObject }) {
+
+  const { tableName = '', sessionId, username, tableId, selectContent } = propsObject;
+
+
+  const [name, setName] = useState(tableName);
+  const [attribs, setAttribs] = useState([
+    { id: null, value: '', type: '', options: null },
+  ]);
+
+  const navigate = useNavigate(); 
+
+  useEffect(() => {
+    const getTableAttribs = async () => {
+      await fetch(`${config.backend}/table/attrib?tableId=${tableId}`)
+        .then(res => res.json())
+        .then(data => {
+          setAttribs(data);
+          console.log('fetched ', data);
+        })
+        .catch(error => console.log(error));
+    }
+    if (![null, undefined].includes(tableId))
+      getTableAttribs();
+    else
+      setAttribs([
+        { id: null, value: '', type: '', options: null },
+      ])
+
+  }, [tableId])
+
+  const [relations, setRelations] = useState([
+    { table: '', name: '', attrib: '', type: '', currentAttrib: null },
+    { table: '', name: '', attrib: '', type: '', currentAttrib: '' },
+    { table: '', name: '', attrib: '', type: '', currentAttrib: null },
+  ]);
+
+  const [relationalAttribs, setRelationalAttribs] = useState([
+    { name: '', relation: '', agg: '' },
+    { name: '', relation: '', agg: '' },
+    { name: '', relation: '', agg: '' },
+  ])
+
+
+  const onCreate = async () => {
+    if (tableId != null || tableId != undefined) {
+      await axios.post(`${config.backend}/table/update`, { sessionId: sessionId, tableId: tableId, name: name, attribs: attribs, username: username })
+
+      selectContent({content_type: 'View', props: {id: tableId, title: name, edit:true, selectContent: selectContent}});  
+      // navigate('/session', {state: {usename: username, sessionId: sessionId, content: {content_type: 'View', props:{id: tableId}}}})
+      return;
+    }
+    const newTableId = await axios.post(`${config.backend}/table/create`, { sessionId: sessionId, name: name, attribs: attribs, username: username })
+    
+    // const content = {content_type: 'View', props: {id: newTableId, title: name, edit:true, selectContent: null}};  
+    // navigate('/session', {state: {username: username, sessionId: sessionId, content: null}})
+
+    selectContent({content_type: 'View', props: {id: newTableId.data.tableId, title: name, edit:true, selectContent: selectContent}});  
+  }
+  const addAttrib = () => {
+    setAttribs([...attribs, { id: null, value: '', type: '', options: null }]);
+  };
+
+  const addRelation = () => {
+    const newRow = { table: '', name: '', attrib: '', type: '', currentAttrib: null };
+    setRelations([...relations, newRow]);
+  };
+
+  const addRelationAttrib = () => {
+    const newRow = { name: '', relation: '', agg: '' };
+    setRelationalAttribs([...relationalAttribs, newRow])
+  }
+
+  const changeTwoWay = (e, index) => {
+    var tempRelations = [...relations];
+    tempRelations[index].currentAttrib = e.target.checked ? '' : null;
+    // console.log(tempRelations);
+    setRelations(tempRelations);
+  }
+
+  return (
+    <div className='table-create-wrapper'>
+      <div className='container-fluid mt-5 pl-4'>
+        <form className='mb-5'>
+          <div className='row'>
+            <label forHtml='TableName' className='m-primary table-create-label col-sm-2 mb-1'>Table Name</label>
+            <div className='col-sm-10'>
+              <input type="text" autoComplete='off' className="col-sm-6 table-create-input-sm" defaultValue={name} id="TableName" onBlur={(e) => setName(e.target.value)}></input>
+            </div>
+          </div>
+        </form>
+
+        <p className='m-primary table-create-label' >Attributes</p>
+
+        <form className='mb-3'>
+          {
+            attribs.map((attrib, idx) => {
+              const setAttrib = (target, val) => {
+                // if(target === 'value' && attribs.map(attrib => attrib.value).includes(val))
+                //   return; 
+
+                var newAttribs = [...attribs];
+                newAttribs[idx][target] = val;
+                setAttribs(newAttribs);
+              }
+              const deleteAttrib = () => {
+                setAttribs(attribs.filter((_, i) => i != idx))
+              }
+              return (<Attribs attrib={attrib} attribs={attribs.map(attrib => attrib.value.trimStart().trimEnd()).filter(attrib => attrib != '')} setAttrib={setAttrib} deleteAttrib={deleteAttrib} />);
+            })
+          }
+
+        </form>
+        <p className='table-create col-sm-1 ml-3 mb-5' onClick={() => addAttrib()}>+Add</p>
+
+        <p className='m-primary table-create-label mb-3' >Relations</p>
+        <form className=''>
+          {
+            relations.map((relation, index) => {
+              const setRelation = (target, value) => {
+                var newRelations = [...relations];
+                newRelations[index][target] = value;
+                setRelations(newRelations);
+                console.log(relations);
+              }
+              return (<Relations sessionId={sessionId} relation={relation} index={index}
+                currentRelations={relations.map(relation => relation.name.trimStart().trimEnd()).filter(relation => relation != '')}
+                currentAttribs={attribs.map(attrib => attrib.value.trimEnd().trimStart()).filter(attrib => attrib != '')}
+                setRelation={setRelation} changeTwoWay={changeTwoWay} />)
+            })
+          }
+
+          <p className='table-create col-sm-1 ml-3 mb-5' onClick={() => addRelation()}>+Add</p>
+        </form>
+
+        <p className='m-primary table-create-label' >Relatonal Attributes</p>
+
+        <form className='mb-3'>
+          {
+            relationalAttribs.map((rAttrib, idx) => {
+              const setRelationalAttrib = (target, val) => {
+
+                var newAttribs = [...relationalAttribs];
+                newAttribs[idx][target] = val;
+                setRelationalAttribs(newAttribs);
+              }
+              return (<RelationalAttrib relationalAttrib={rAttrib} relationAttribs={relationalAttribs.map(attrib => attrib.name.trim()).filter(attrib => attrib != '')}
+                currentRelations={relations} setRelationAttrib={setRelationalAttrib} />);
+            })
+          }
+
+        </form>
+        <p className='table-create col-sm-1 ml-3 mb-5' onClick={() => addRelationAttrib()}>+Add</p>
+
+      </div>
+      <div className='container-fluid row d-flex justify-content-end'>
+        <div className='m-button table-create-button' onClick={() => onCreate()}>{[null, undefined].includes(tableId) ? 'Create' : 'Update'}</div>
+
+      </div>
+    </div>
+  )
+
+
+}
+
+function Attribs({ attrib, attribs, setAttrib, deleteAttrib }) {
   const type = [
     'single-value-text', 'single-value-number', 'multi-value-number', 'multi-value-text', 'multi-select-text', 'multi-select-number', 'single-select-text', 'single-select-number'
   ]
@@ -14,13 +180,13 @@ function Attribs({ attrib, attribs, setAttrib, deleteAttrib}) {
   const [select, setSelect] = useState(false);
   const [selectPos, setSelectPos] = useState({ x: 0, y: 0 });
   const [value, setValue] = useState(attrib.value);
-  const [options, setOptions] = useState([])
+  const [options, setOptions] = useState(attrib.options)
   const [selectedItems, setSelectedItems] = useState([])
 
   const [contextPos, setContextPos] = useState({ x: 0, y: 0 });
   const [showContext, setShowContext] = useState(false);
 
-  const [showOptions, setShowOptions] = useState(true); 
+  const [showOptions, setShowOptions] = useState(true);
 
 
   const onSelect = (e) => {
@@ -76,6 +242,14 @@ function Attribs({ attrib, attribs, setAttrib, deleteAttrib}) {
 
   }, [])
 
+  useEffect(() => {
+    setValue(attrib.value);
+  }, [attrib.value]);
+
+  useEffect(() => {
+    setOptions(attrib.options);
+  }, [attrib.options]);
+
   return (
     <>
       <div className='row' style={{ marginBottom: '0.75rem' }}>
@@ -98,16 +272,25 @@ function Attribs({ attrib, attribs, setAttrib, deleteAttrib}) {
         {
           attrib.type.includes('select') &&
           <div className='col-sm-3 p-0'>
-            <input type="text" autoComplete='off' className="table-create-input table-create-input-sm" style={{width: '85%'}}
+            <input type="text" autoComplete='off' className="table-create-input table-create-input-sm" style={{ width: '85%' }}
               placeholder='options' onKeyDown={(e) => {
-                if (e.key == 'Enter' && !options.includes(e.target.value.trim())) {
-                  setAttrib('options', [...options, e.target.value.trim()]);
-                  setOptions([...options, e.target.value.trim()]); 
-                  e.target.value = ''; 
+                if (e.key == 'Enter' && options === null) {
+                  setAttrib('options', [e.target.value.trim()]);
+                  setOptions([e.target.value.trim()]);
+                  e.target.value = '';
+                  return;
                 }
-                
+
+                if (e.key == 'Enter' && !options.includes(e.target.value.trim())) {
+                  if (attrib.type.includes('number') && !/^\d+$/.test(e.target.value.trim()))
+                    return;
+                  setAttrib('options', [...options, e.target.value.trim()]);
+                  setOptions([...options, e.target.value.trim()]);
+                  e.target.value = '';
+                }
+
               }}></input>
-              <i className={`fas ${showOptions ? 'fa-eye' : 'fa-eye-slash'} select-option-icon `} onClick={() => setShowOptions(!showOptions)}/>
+            <i className={`fas ${showOptions ? 'fa-eye' : 'fa-eye-slash'} select-option-icon `} onClick={() => setShowOptions(!showOptions)} />
 
             <ContextMenu position={contextPos} show={showContext} options={[{
               name: 'delete', onClick: () => {
@@ -119,7 +302,7 @@ function Attribs({ attrib, attribs, setAttrib, deleteAttrib}) {
             }]} />
 
             {
-              options.length != 0 && showOptions && 
+              options != null && options != undefined && options.length != 0 && showOptions &&
               <div className='select-options col-sm-11' onContextMenu={(e) => onContextClick(e, setShowContext, setContextPos)}>
                 {
                   options.map((option, idx) => {
@@ -354,139 +537,6 @@ function Relations({ relation, setRelation, currentAttribs, currentRelations, in
       }
     </>
   )
-}
-function TableCreate({ propsObject }) {
-
-  const {sessionId, username} = propsObject;
-
-  const [name, setName] = useState('');
-  const [attribs, setAttribs] = useState([
-    { value: '', type: '', options: null },
-    { value: '', type: '', options: null },
-    { value: '', type: '', options: null },
-  ]);
-
-  const [relations, setRelations] = useState([
-    { table: '', name: '', attrib: '', type: '', currentAttrib: null },
-    { table: '', name: '', attrib: '', type: '', currentAttrib: '' },
-    { table: '', name: '', attrib: '', type: '', currentAttrib: null },
-  ]);
-
-  const [relationalAttribs, setRelationalAttribs] = useState([
-    { name: '', relation: '', agg: '' },
-    { name: '', relation: '', agg: '' },
-    { name: '', relation: '', agg: '' },
-  ])
-
-
-  const onCreate = async () => {
-    await axios.post(`${config.backend}/table/create`, {sessionId: sessionId, name: name,  attribs: attribs, username: username })
-
-  }
-  const addAttrib = () => {
-    setAttribs([...attribs, { value: '', type: '' }]);
-  };
-
-  const addRelation = () => {
-    const newRow = { table: '', name: '', attrib: '', type: '', currentAttrib: null };
-    setRelations([...relations, newRow]);
-  };
-
-  const addRelationAttrib = () => {
-    const newRow = { name: '', relation: '', agg: '' };
-    setRelationalAttribs([...relationalAttribs, newRow])
-  }
-
-  const changeTwoWay = (e, index) => {
-    var tempRelations = [...relations];
-    tempRelations[index].currentAttrib = e.target.checked ? '' : null;
-    // console.log(tempRelations);
-    setRelations(tempRelations);
-  }
-
-  return (
-    <div className='table-create-wrapper'>
-      <div className='container-fluid mt-5 pl-4'>
-        <form className='mb-5'>
-          <div className='row'>
-            <label forHtml='TableName' className='m-primary table-create-label col-sm-2 mb-1'>Table Name</label>
-            <div className='col-sm-10'>
-              <input type="text" autoComplete='off' className="col-sm-6 table-create-input-sm" defaultValue={name} id="TableName" onBlur={(e) => setName(e.target.value)}></input>
-            </div>
-          </div>
-        </form>
-
-        <p className='m-primary table-create-label' >Attributes</p>
-
-        <form className='mb-3'>
-          {
-            attribs.map((attrib, idx) => {
-              const setAttrib = (target, val) => {
-                // if(target === 'value' && attribs.map(attrib => attrib.value).includes(val))
-                //   return; 
-
-                var newAttribs = [...attribs];
-                newAttribs[idx][target] = val;
-                setAttribs(newAttribs);
-              }
-              const deleteAttrib = () => {
-                setAttribs(attribs.filter((_, i) => i != idx))
-              }
-              return (<Attribs attrib={attrib} attribs={attribs.map(attrib => attrib.value.trimStart().trimEnd()).filter(attrib => attrib != '')} setAttrib={setAttrib} deleteAttrib={deleteAttrib} />);
-            })
-          }
-
-        </form>
-        <p className='table-create col-sm-1 ml-3 mb-5' onClick={() => addAttrib()}>+Add</p>
-
-        <p className='m-primary table-create-label mb-3' >Relations</p>
-        <form className=''>
-          {
-            relations.map((relation, index) => {
-              const setRelation = (target, value) => {
-                var newRelations = [...relations];
-                newRelations[index][target] = value;
-                setRelations(newRelations);
-                console.log(relations);
-              }
-              return (<Relations sessionId={sessionId} relation={relation} index={index}
-                currentRelations={relations.map(relation => relation.name.trimStart().trimEnd()).filter(relation => relation != '')}
-                currentAttribs={attribs.map(attrib => attrib.value.trimEnd().trimStart()).filter(attrib => attrib != '')}
-                setRelation={setRelation} changeTwoWay={changeTwoWay} />)
-            })
-          }
-
-          <p className='table-create col-sm-1 ml-3 mb-5' onClick={() => addRelation()}>+Add</p>
-        </form>
-
-        <p className='m-primary table-create-label' >Relatonal Attributes</p>
-
-        <form className='mb-3'>
-          {
-            relationalAttribs.map((rAttrib, idx) => {
-              const setRelationalAttrib = (target, val) => {
-
-                var newAttribs = [...relationalAttribs];
-                newAttribs[idx][target] = val;
-                setRelationalAttribs(newAttribs);
-              }
-              return (<RelationalAttrib relationalAttrib={rAttrib} relationAttribs={relationalAttribs.map(attrib => attrib.name.trim()).filter(attrib => attrib != '')}
-                currentRelations={relations} setRelationAttrib={setRelationalAttrib} />);
-            })
-          }
-
-        </form>
-        <p className='table-create col-sm-1 ml-3 mb-5' onClick={() => addRelationAttrib()}>+Add</p>
-
-      </div>
-      <div className='container-fluid row d-flex justify-content-end'>
-        <div className='m-button table-create-button' onClick={() => onCreate()}>Create</div>
-
-      </div>
-    </div>
-  )
-
-
 }
 
 export default TableCreate;

@@ -6,10 +6,9 @@ import { ContextMenu, onContextClick } from '../context_menu/context_menu';
 import axios from 'axios';
 import config from '../../../config';
 import '../../components/login/login.css'
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 
 function SidebarItem({ title, condition, select, newContent }) {
-
   return (
     <li className="nav-item " style={{ color: '#bdbdbd', fontWeight: 'bold' }}>
       <a className={`nav-link${condition ? ' active' : ''}`} data-toggle="pill" onClick={() => select(newContent)} role="tab">
@@ -18,11 +17,12 @@ function SidebarItem({ title, condition, select, newContent }) {
     </li>
   )
 }
+
 function Create(props) {
 
   return (
     <li className="nav-item">
-      <p className='nav-link m-create m-secondary' onClick={() => props.select({ content_type: 'TableCreate', props: {sessionId: props.sessionId, username: props.username} })} role="tab">
+      <p className='nav-link m-create m-secondary' onClick={() => props.select({ content_type: 'TableCreate', props: {sessionId: props.sessionId, username: props.username, tableId:null, selectContent: props.select} })} role="tab">
         + Create Table
       </p>
     </li>
@@ -34,6 +34,10 @@ function SidebarView(props) {
   const [showCm, setShowCm] = useState(false);
   const [cmPos, setCmPos] = useState({ x: 0, y: 0 });
 
+  const cmOptions = [
+    { name: 'update', onClick: () => { props.select({content_type: 'TableCreate', props :{tableName: props.item.title, sessionId:props.sessionId, tableId: props.id, username: props.username, selectContent: props.select}}); setShowCm(false) } }, 
+    { name: 'delete', onClick: () => { props.deleteTable(props.id); setShowCm(false) } }, 
+  ]
   useEffect(() => {
     const handleClickOutsideEditRole = (e) => {
       if (!e.target.closest('.context-menu')) {
@@ -46,9 +50,10 @@ function SidebarView(props) {
     };
   }, []);
 
+
   return (
     <>
-      <ContextMenu position={cmPos} show={props.item.edit && showCm} options={[{ name: 'delete', onClick: () => { props.deleteTable(props.id); setShowCm(false) } }]} />
+      <ContextMenu position={cmPos} show={props.item.edit && showCm} options={cmOptions} />
       <li className="nav-item mb-1">
         <a className={`m-primary nav-link${props.item.id == props.selected ? ' active' : ''}`} data-toggle="pill"
           onClick={() => props.select({ content_type: 'View', props: { id: props.item.id, title: props.item.title, edit:props.item.edit, selectContent: props.select } })} role="tab"
@@ -62,20 +67,21 @@ function SidebarView(props) {
 }
 
 
-function Sidebar({ userName, title, selectContent, selected, }) {
+function Sidebar({ username, sessionId,  title, selectContent, selected, }) {
   const [login, setLogin] = useState(false);
   const [showCm, setShowCm] = useState(false);
   const [cmPos, setCmPos] = useState({ x: 0, y: 0 });
   const [nav, setNavigate] = useState('');
   const [edit, setEdit] = useState(false);
 
-  const params = new URLSearchParams(window.location.search);
-  const sessionId = params.get('sessionId');
-  const username = params.get('username'); 
+  const navigate = useNavigate(); 
+  // const params = new URLSearchParams(window.location.search);
+  // const sessionId = params.get('sessionId');
+  // const username = params.get('username'); 
 
 
   const cmOptions = [
-    { name: 'Home', onClick: () => setNavigate(`/home?username=${userName}`) },
+    { name: 'Home', onClick: () => navigate('/home', {state: {username:username}})},
     { name: 'Switch Account', onClick: () => { setLogin(true); setShowCm(false) } },
     { name: 'Logout', onClick: () => { setNavigate('/login') } },
   ]
@@ -99,7 +105,7 @@ function Sidebar({ userName, title, selectContent, selected, }) {
       .then((data) => {
         setData(data)
       })
-  }, [])
+  }, [selected])
 
 
 
@@ -156,12 +162,15 @@ function Sidebar({ userName, title, selectContent, selected, }) {
               select={selectContent} newContent={{ content_type: 'Members', props: {} }} />
           }
 
-
-          <hr className='pl-0 ml-0' style={{ border: '1px solid #fefefe90', width: '100%', overflow: 'none' }}></hr>
+          {
+            data.Members.view &&
+            <hr className='pl-0 ml-0' style={{ border: '1px solid #fefefe90', width: '100%', overflow: 'none' }}></hr>
+          }
 
           <div className='sidebar-table-list'>
             {data.tables.filter(item => item.view).map((listItem) => {
-              return <SidebarView key={listItem.title} title={listItem.title} edit={listItem.edit} id={listItem.id} deleteTable={deleteTable} item={listItem} selected={selected.props.id === undefined ? -1 : selected.props.id} select={selectContent} />
+              return <SidebarView key={listItem.title} title={listItem.title} edit={listItem.edit} sessionId={sessionId} username={username}
+              id={listItem.id} deleteTable={deleteTable} item={listItem} selected={selected.props.id === undefined ? -1 : selected.props.id} select={selectContent} />
               // return <SidebarItem key={listItem.title} item={listItem} selected = {props.selected.props.id === undefined? -1 : props.selected.props.id} select={props.selectContent}/>
             })}
             {

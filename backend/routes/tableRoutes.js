@@ -5,6 +5,7 @@ const tableController = require('../controllers/tableController');
 
 router.get('/index', tableController.index)
 router.get('/data', tableController.getData);
+router.get('/attrib', tableController.getAttribs);
 router.post('/data/update', tableController.updateData);
 
 router.post('/config/update', tableController.configUpdate); 

@@ -18,6 +18,7 @@ function Table(props) {
         filter: { attrib: '', val: '' },
         sort: { attrib: '', asc: true },
         expanded: false,
+        enlarge: true
       },
       attribs: [
       ],
@@ -32,11 +33,33 @@ function Table(props) {
 
 
   useEffect(() => {
-    fetch(`${config.backend}/table/data?tableId=${props.id}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setTableData(data);
-      })
+    setTableData({
+      name: '',
+      configuration: {
+        filter: { attrib: '', val: '' },
+        sort: { attrib: '', asc: true },
+        expanded: false,
+      },
+      attribs: [
+      ],
+      data: [
+        {
+          tupleId: 0,
+          vals: [
+          ]
+        },
+      ]
+    })
+
+    const getData = async () => {
+      await fetch(`${config.backend}/table/data?tableId=${props.id}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setTableData(data);
+        })
+    }
+    console.log(props.id)
+    getData();
   }, [props.id])
 
 
@@ -50,8 +73,8 @@ function Table(props) {
   }, [configuration]);
 
   const onTupleCreate = async () => {
-    if(!props.edit || tableData.attribs.length === 0)
-      return;  
+    if (!props.edit || tableData.attribs.length === 0)
+      return;
     const { data } = await axios.post(`${config.backend}/table/tuple/add`, { attribs: tableData.attribs, tableId: props.id })
     // const newTuple = {
     //   tupleId: 0,
@@ -86,8 +109,8 @@ function Table(props) {
       </div> */}
       <Headers selectContent={props.selectContent} data={tableData} configuration={configuration} setConfiguration={setConfiguration} />
       <div className='table-responsive table-wrapper '>
-        <table className="table  table-dark white-border" style={style}>
-          <Head attribs={tableData.attribs} configuration={configuration} setConfiguration={setConfiguration} />
+        <table className={`table table-dark  ${!configuration.enlarge && 'table-sm'} white-border`} style={style}>
+          <Head attribs={tableData.attribs} permission={props.edit} configuration={configuration} setConfiguration={setConfiguration} />
           <tbody className='body-wrapper'>
             {
               tableData.data
@@ -101,12 +124,12 @@ function Table(props) {
                 })
                 .map((tuple) => {
                   return <Tuple data={tuple.vals} id={tuple.tupleId} attribs={tableData.attribs}
-                    permission={props.edit} expanded={configuration.expanded} tableData={tableData} setTableData={setTableData} />
+                    permission={props.edit} expanded={configuration.expanded} enlarge={configuration.enlarge} tableData={tableData} setTableData={setTableData} />
                 })
             }
 
-            <tr className={props.edit && tableData.attribs.length != 0  && 'create-tuple'} onClick={() => onTupleCreate()}><td colSpan={tableData.attribs.length}>
-              {props.edit && tableData.attribs.length != 0  && '+ Create'}
+            <tr className={props.edit && tableData.attribs.length != 0 && 'create-tuple'} onClick={() => onTupleCreate()}><td colSpan={tableData.attribs.length}>
+              {props.edit && tableData.attribs.length != 0 && '+ Create'}
             </td></tr>
 
           </tbody>
@@ -116,16 +139,18 @@ function Table(props) {
   )
 }
 
-function Tuple({ data, attribs, id, permission, expanded, tableData, setTableData }) {
+function Tuple({ data, attribs, id, permission, expanded, enlarge, tableData, setTableData }) {
 
   const [contextPos, setContextPos] = useState({ x: 0, y: 0 });
   const [showContext, setShowContext] = useState(false);
 
   const cellWidth = 100 / attribs.length;
-  console.log(data)
-  const style = (data.every(current_data => (Array.isArray(current_data.value) && current_data.value.length === 0) || (!Array.isArray(current_data.value) && current_data.value.trim().length === 0)) ? { height: '50px' } : {})
+  const height = enlarge ? '50px' : '35px'
+  const style = (data.every(current_data => (Array.isArray(current_data.value) && current_data.value.length === 0) || (!Array.isArray(current_data.value) && current_data.value.trim().length === 0)) ? { cursor: 'default', height: height } : { cursor: 'default' })
 
   const onDelete = async () => {
+    if (!permission)
+      return;
     await axios.post(`${config.backend}/table/tuple/delete`, { tupleId: id });
     setTableData({ ...tableData, data: tableData.data.filter(tuple => tuple.tupleId != id) });
 
@@ -160,7 +185,7 @@ function Tuple({ data, attribs, id, permission, expanded, tableData, setTableDat
     <>
 
       {
-        <ContextMenu position={contextPos} show={showContext} options={[{ name: 'delete tuple', onClick: onDelete }]} />
+        <ContextMenu position={contextPos} show={permission && showContext} options={[{ name: 'delete tuple', onClick: onDelete }]} />
       }
       {
         <tr className='container-fluid' onContextMenu={(e) => onContextClick(e, setShowContext, setContextPos)} style={style}>
@@ -173,7 +198,7 @@ function Tuple({ data, attribs, id, permission, expanded, tableData, setTableDat
             }).map((data) => {
               const attrib = attribs.find(attrib => attrib.id === data.attrib_id)
               const options = attrib.options === undefined ? [] : attrib.options
-              return <Cell key={data.attrib_id} tupleId={id} attrib_id={data.attrib_id} value={data.value}
+              return <Cell key={data.attrib_id} tupleId={id} attrib_id={data.attrib_id} value={data.value} enlarge={enlarge}
                 options={options} permission={permission} type={attrib.type} cellWidth={cellWidth} expanded={expanded} />
             })
           }
@@ -183,10 +208,14 @@ function Tuple({ data, attribs, id, permission, expanded, tableData, setTableDat
   )
 }
 
-function Head({ attribs, configuration, setConfiguration }) {
+function Head({ attribs, permission, configuration, setConfiguration }) {
   // const cellWidth = { width: (props.data.length >= 4 ? '25%' : `${100 * (1 / props.length)}%`) };
 
+  const cursor = permission ? 'pointer' : 'default';
   const onClick = async (attrib) => {
+    if (!permission)
+      return;
+
     if (configuration.sort.attrib === attrib && configuration.sort.asc === true)
       setConfiguration({ ...configuration, sort: { attrib: attrib, asc: !configuration.sort.asc } });
     else if (configuration.sort.attrib === attrib && configuration.sort.asc === false)
@@ -202,15 +231,15 @@ function Head({ attribs, configuration, setConfiguration }) {
         {
           attribs.map((attrib) => {
             const icon = attrib.type.includes('number') ? '#' : 'T';
-            const style = { fontSize: '16px', fontFamily: '', opacity: '50%' };
+            const style = { fontSize: configuration.enlarge ? 'normal' : '14px', fontFamily: '', opacity: '50%' };
 
             return (
-              <th className='w-20 pl-0' scope="col" style={{ width: `${100 / attribs.length}%`, cursor: 'pointer' }}
+              <th className='w-20 pl-0' scope="col" style={{ width: `${100 / attribs.length}%`, cursor: cursor }}
                 onClick={() => onClick(attrib.name)}>
 
                 <div className='container-fluid row d-flex align-items-center pr-0'>
                   <p className='m-0 mr-2 m-secondary' style={style}>{icon}</p>
-                  <p className='m-0 p-0'>{attrib.name}</p>
+                  <p className='p-0' style={!configuration.enlarge ? { fontSize: '14px', margin: '0.15rem' } : { margin: '0.15rem' }} >{attrib.name}</p>
                   {
                     configuration.sort.attrib === attrib.name &&
                     <i className={`fas fa-chevron-${configuration.sort.asc ? 'down' : 'up'} p-0 m-0 m-secondary col justify-content-end`} style={{ fontSize: '12px', opacity: '50%' }}></i>
@@ -234,7 +263,8 @@ Cell.propTypes = {
   options: PropTypes.array,
   selected: PropTypes.bool,
   errors: PropTypes.array,
-  expanded: PropTypes.bool
+  expanded: PropTypes.bool,
+  enlarge: PropTypes.bool,
 
 }
 
@@ -254,7 +284,32 @@ function Cell(props) {
 
   const [contextPos, setContextPos] = useState({ x: 0, y: 0 });
   const [showContext, setShowContext] = useState(false);
+  const [fontSize, setFontSize] = useState(props.enlarge ? 'normal' : '14px');
 
+  const cursor = props.permission ? 'pointer' : 'default';
+
+  const [refTuple, setRefTuple] = useState({});
+
+
+
+  useEffect(() => {
+    if (!props.type.includes('relation'))
+      return;
+
+    const currentRefTuple = {}
+
+    props.options.forEach(currentOption => {
+      currentRefTuple[currentOption.option] = currentOption.refTuple;
+    })
+
+    setRefTuple(currentRefTuple)
+
+  }, [props.tupleId, props.attribId])
+
+  useEffect(() => {
+    setFontSize(props.enlarge ? '16px' : '14px');
+
+  }, [props.enlarge])
 
   const onSubmit = async (newValue) => {
 
@@ -266,14 +321,13 @@ function Cell(props) {
     else
       setValue(newValue)
 
-    console.log(newValue);
-    console.log(props.tupleId);
     await axios.post(`${config.backend}/table/data/update`,
       {
         type: props.type,
         attribId: props.attrib_id,
         tupleId: props.tupleId,
-        value: newValue
+        value: newValue, 
+        refTuple: props.type.includes('relation') ? refTuple[props.options] : null
       });
     console.log(`${props.attrib_id} changed to ${newValue}`)
     setClicked(false);
@@ -389,9 +443,11 @@ function Cell(props) {
         {<ContextMenu show={showContext} position={contextPos} options={[{ name: 'delete', onClick: onDelete }]} />}
         {props.type.includes('multi') ?
           (<ul className='mb-2 ml-1 pl-0 list-unstyled'>
-            {value.map((currentval, idx) => <li className={`cell-list-item ${selectedItems.includes(idx) ? 'm-primary' : 'm-secondary'}`} onClick={(e) => handleSelectList(idx, e.ctrlKey, e.shiftKey)}>{currentval}</li>)}
+            {value.map((currentval, idx) => <li className={`cell-list-item ${selectedItems.includes(idx) ? 'm-primary' : 'm-secondary'}`}
+              style={{ fontSize: fontSize }}
+              onClick={(e) => handleSelectList(idx, e.ctrlKey, e.shiftKey)}>{currentval}</li>)}
           </ul>)
-          : <div className='mb-2 ml-1'>{value}</div>}
+          : <div me='mb-2 ml-1'>{value}</div>}
         <Select list={props.options} position={props.type.includes('multi') ? undefined : selectPos} onSelectValue={onSubmit} clear={!props.type.includes('multi')} />
       </td>
     )
@@ -412,6 +468,7 @@ function Cell(props) {
                 {value.map((currentval, idx) => <li className={`cell-list-item ${selectedItems.includes(idx) ? 'm-primary' : 'm-secondary'}`} onClick={(e) => handleSelectList(idx, e.ctrlKey, e.shiftKey)}>{currentval}</li>)}
               </ul>
             }
+
             <input type='text' id='box' className='form-control table-input' autoComplete='off'
               defaultValue={props.type.includes('multi') ? null : value} autoFocus onKeyDown={(e) => e.key === 'Enter' && onSubmit(e.target.value)} />
           </div>
@@ -422,16 +479,16 @@ function Cell(props) {
 
   return (
     // <td className='' style={{ width: `${props.cellWidth}%` }} onClick={onClick}>{value}</td>
-    <td className='cell ' style={{ height: '25px', overflowX: 'auto', maxWidth: `${props.cellWidth}%`, cursor: 'pointer' }} ref={cellRef} onClick={(e) => onClick(e)}>
+    <td className='cell ' style={{ height: '25px', overflowX: 'auto', maxWidth: `${props.cellWidth}%`, cursor: cursor }} ref={cellRef} onClick={(e) => onClick(e)}>
       {Array.isArray(value) ?
         (
-          <div className={props.expanded ? 'ml-1 ' : 'cell-multi-view ml-1'}>
+          <div className={props.expanded ? 'ml-1 ' : 'cell-multi-view ml-1'} style={{ cursor: cursor, fontSize: fontSize }}>
             <ul className='mb-1 pl-0' style={{ listStyle: 'none' }}>
               {value.map((currentval) => <li className=''>{currentval}</li>)}
             </ul>
           </div>
         )
-        : <div className='cell-text mb-2 ml-1'>{value}</div>
+        : <div className='cell-text ml-1' style={props.expanded ? { cursor: cursor, fontSize: fontSize } : { cursor: cursor, fontSize: fontSize, overflowX: 'auto', maxHeight: props.enlarge ? '40px' : '25px' }}>{value}</div>
       }
     </td>
   );

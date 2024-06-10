@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import './Members.css'
 import '../../assets/theme.css'
 // import { selectMouseDown, selectMouseUp, selectMouseMove, SelectBox } from "../display_box/SelectBox";
@@ -26,7 +27,7 @@ function Box({ role, allMembers, edit, deleteRole, updateMember, updateRole, ses
 	useEffect(() => {
 		setMemberList(role.members);
 	}, [role]);
-	
+
 	useEffect(() => {
 		const effect = async () => {
 
@@ -163,10 +164,7 @@ function Box({ role, allMembers, edit, deleteRole, updateMember, updateRole, ses
 function Members() {
 
 
-	const params = new URLSearchParams(window.location.search);
-	const username = params.get('username');
-	const sessionId = params.get('sessionId');
-
+	const {username, sessionId} = useLocation().state; 
 	const [roles, setRoles] = useState([]);
 	const [editPermission, setEditPermission] = useState(false);
 	const [members, setMembers] = useState([]);
@@ -196,6 +194,7 @@ function Members() {
 	}
 
 	const updateRolePermission = async (id, newRole, request = true) => {
+		console.log(request); 
 		const idx = roles.findIndex(role => role.id === id);
 		const newRoles = [...roles];
 		newRoles[idx] = newRole;
