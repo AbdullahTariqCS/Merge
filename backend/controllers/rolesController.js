@@ -208,8 +208,8 @@ const insertMember = async (req, res) => {
 
 const deleteRoleTable = async (req, res) => {
   const { mode, roleId, tables } = req.body;
-
   console.log(mode, roleId, tables)
+
   if (mode === 'view') {
     await Knex('roles_table_view').whereIn('t_id', tables).andWhere('role_id', roleId).del()
       .catch(error => console.log(error));
@@ -221,6 +221,7 @@ const deleteRoleTable = async (req, res) => {
 
   await Knex('roles_table_edit').whereIn('t_id', tables).andWhere('role_id', roleId).del()
     .catch(error => console.log(error));
+  
   res.sendStatus(200);
 
 }

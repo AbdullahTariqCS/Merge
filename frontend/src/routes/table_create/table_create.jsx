@@ -50,6 +50,9 @@ function TableCreate({ propsObject }) {
     { name: '', relation: '', agg: '' },
   ])
 
+  useEffect(() => {
+    console.log(relations)
+  }, [relations])
 
   const onCreate = async () => {
     if (tableId != null || tableId != undefined) {
@@ -441,6 +444,7 @@ function Relations({ relation, setRelation, currentAttribs, currentRelations, in
     else
       setName('');
   }
+  
   const onSelect = (target, e) => {
     const rect = e.target.getBoundingClientRect();
     var newSelect = { ...select };
@@ -448,6 +452,7 @@ function Relations({ relation, setRelation, currentAttribs, currentRelations, in
     newSelect[target].pos = { x: rect.x, y: rect.y + 50 };
     setSelect(newSelect);
   }
+
   const onAttribUpdate = (val) => {
     const attrib = aAttribs.find(attrib => attrib.name.trim() === val.trim());
     setRelation('attrib', val);

@@ -19,6 +19,7 @@ function SessionIndex() {
   const [sessions, setSessions] = useState([{ create: true }]);
 
 
+
   useEffect(() => {
     fetch(`${config.backend}/session/index?username=${username}&userToken=${userToken}`)
       .then((res) => res.json())

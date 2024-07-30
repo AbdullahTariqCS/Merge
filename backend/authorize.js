@@ -17,7 +17,7 @@ const authorize = (token, username) => {
       return;
     }
 
-    console.log(`${username} authorized`); 
+    // console.log(`${username} authorized`); 
   })
   return val ;
 }

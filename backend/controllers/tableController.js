@@ -88,12 +88,24 @@ const getData = async (req, res) => {
 
 
   const attribsQuery = await Knex.raw("Select * from attributes_ where t_id = ?", [tableId]);
+  // const relationQuery = await Knex('relation').where('t_id', tableId)
+  
   const attribs = attribsQuery.rows.map(attrib => ({
     id: attrib.a_id,
     name: attrib.a_name,
     type: attrib.a_type,
     position: attrib.a_positions
-  }))
+  })) 
+  // + relationQuery.map(relation => {
+
+
+  //   return { 
+  //     id: relation.r_id, 
+  //     name: r_name, 
+  //     type: 'relation', 
+  //     position: r_position,   
+  //   }
+  // })
 
   const attribMV = await Promise.all(attribs.map(async (attrib) => {
     if (!attrib.type.includes('select'))

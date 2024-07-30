@@ -34,9 +34,9 @@ function Box({ role, allMembers, edit, deleteRole, updateMember, updateRole, ses
 			if (newMember == null)
 				return;
 
+			updateRole(role.id, { ...role, members: [...memberList, newMember] });
 			setMemberList([...memberList, newMember]);
 
-			updateRole(role.id, { ...role, members: memberList });
 			setNewMember(null);
 		}
 		effect();
@@ -51,6 +51,8 @@ function Box({ role, allMembers, edit, deleteRole, updateMember, updateRole, ses
 		// updateRole(role.id, { ...role, members: [...memberList, val] });
 		updateMember(role.id, val);
 		setMemberList([...memberList, val]);
+		updateRole(role.id, { ...role, members: [...memberList, val] }, false);
+		
 	}
 
 	const onMemberDelete = async () => {

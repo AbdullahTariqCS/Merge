@@ -7,8 +7,6 @@ import axios from 'axios';
 import { ContextMenu, onContextClick } from '../context_menu/context_menu';
 
 function RoleModel({ open, setOpen, canEdit, role, sessionId, userId, updateRole }) {
-
-
   const [tables, setTables] = useState([]);
 
   const [showViewCm, setShowViewCm] = useState(false);
@@ -16,6 +14,8 @@ function RoleModel({ open, setOpen, canEdit, role, sessionId, userId, updateRole
 
   const [viewCmPos, setViewCmPos] = useState({ x: 0, y: 0 });
   const [editCmPos, setEditCmPos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => console.log(role), [role])
 
   useState(() => {
 
@@ -33,7 +33,7 @@ function RoleModel({ open, setOpen, canEdit, role, sessionId, userId, updateRole
   const onUpdate = () => {
     //api/role/update/:role_id
     setOpen(false);
-    
+
   }
 
   const colors = ['green', 'cyan', 'red', 'orange'];
@@ -155,16 +155,17 @@ function RoleModel({ open, setOpen, canEdit, role, sessionId, userId, updateRole
 
     }, false)
 
-    
-    
+
+
     await axios.post(`${config.backend}/role/table/delete`, { mode: 'view', roleId: role.id, tables: role.tablesPermission.view.filter((_, idx) => viewSelectedItems.includes(idx)) })
-    setShowViewCm(false); 
+    setShowViewCm(false);
   }
 
 
   const deleteEditTables = async () => {
     if (!canEdit || editSelectedItems.length === 0)
       return
+
     updateRole(role.id, {
       ...role, tablesPermission:
       {
@@ -172,7 +173,7 @@ function RoleModel({ open, setOpen, canEdit, role, sessionId, userId, updateRole
         edit: role.tablesPermission.edit.filter((_, idx) => !editSelectedItems.includes(idx)),
       }
     }, false)
-    await axios.post(`${config.backend}/role/table/delete`, { mode: 'edit', roleId: role.id, tables: role.tablesPermission.edit.filter((_, idx) => viewSelectedItems.includes(idx)) })
+    await axios.post(`${config.backend}/role/table/delete`, { mode: 'edit', roleId: role.id, tables: role.tablesPermission.edit.filter((_, idx) => editSelectedItems.includes(idx)) })
     setShowEditCm(false);
   }
 
