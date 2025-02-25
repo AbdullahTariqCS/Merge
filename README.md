@@ -136,7 +136,7 @@ Contains the core source code of the React application:
 
 ## **Running the Project**
 
-###️ **Backend Setup**
+### **Backend Setup**
 
 1. Navigate to the backend directory:
    ```bash
