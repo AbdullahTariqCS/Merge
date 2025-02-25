@@ -1,4 +1,4 @@
-Developed a web application for users to create and manage relational tables. The application supports automatic table decomposition and stores data efficiently in a PostgreSQL database. It is built with **React** for the frontend and **Express.js** for the backend, following an MVC architecture to ensure organized and maintainable code. Each table can have multiple views across different pages, offering flexibility in how users interact with their data.
+A web application for users to create and manage relational tables. The application supports automatic table decomposition and stores data efficiently in a PostgreSQL database. It is built with **React** for the frontend and **Express.js** for the backend, following an MVC architecture to ensure organized and maintainable code. Each table can have multiple views across different pages, offering flexibility in how users interact with their data.
 
 ## **Database Structure**
 ![database.jpeg](img/database.jpeg)
